@@ -20,8 +20,10 @@ spec:
         {{- include "krystalinex.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: loki
     spec:
+      {{- if eq .Values.global.storageClass "local-storage" }}
       nodeSelector:
         kubernetes.io/hostname: worker1
+      {{- end }}
       securityContext:
         fsGroup: 10001
         runAsUser: 10001
@@ -80,7 +82,9 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: local-storage
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.loki.persistence.size }}

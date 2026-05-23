@@ -13,6 +13,8 @@ import { trainingStore } from './training-store';
 import { amountProfiler } from './amount-profiler';
 import { amountAnomalyDetector } from './amount-anomaly-detector';
 import { topologyService } from './topology-service';
+import { analysisService } from './analysis-service';
+import { wsServer } from './ws-server';
 import { createLogger } from '../lib/logger';
 import { getErrorMessage } from '../lib/errors';
 import type {
@@ -104,28 +106,24 @@ router.get('/history', async (req, res) => {
  * Trigger LLM analysis for a trace
  */
 router.post('/analyze', async (req, res) => {
-    // Override global 30s timeout — F16 model on CPU takes ~4-5 minutes
-    res.setTimeout(330000);
-
     const { traceId, anomalyId } = req.body;
 
     if (!traceId) {
         return res.status(400).json({ error: 'traceId is required' });
     }
 
-    // Check for cached analysis
+    // Check for cached analysis — return immediately if available
     const cached = historyStore.getAnalysis(traceId);
     if (cached) {
         return res.json(cached);
     }
 
-    // Find the anomaly
+    // Find the anomaly or create a synthetic one
     const anomalies = anomalyDetector.getActiveAnomalies();
-    const anomaly = anomalies.find(a => a.traceId === traceId || a.id === anomalyId);
+    let anomaly = anomalies.find(a => a.traceId === traceId || a.id === anomalyId);
 
     if (!anomaly) {
-        // Create a synthetic anomaly for analysis
-        const syntheticAnomaly = {
+        anomaly = {
             id: traceId,
             traceId,
             spanId: 'unknown',
@@ -140,30 +138,29 @@ router.post('/analyze', async (req, res) => {
             timestamp: new Date(),
             attributes: {}
         };
-
-        const { analysisService } = await import('./analysis-service');
-        const analysis = await analysisService.analyzeAnomaly(syntheticAnomaly);
-        return res.json(analysis);
     }
 
-    // Fetch full trace for context
-    let fullTrace;
-    try {
-        const jaegerUrl = process.env.JAEGER_URL || 'http://localhost:16686';
-        const traceResponse = await fetch(`${jaegerUrl}/api/traces/${traceId}`);
-        if (traceResponse.ok) {
-            const data = await traceResponse.json();
-            fullTrace = data.data?.[0];
-        }
-    } catch (error) {
-        // Continue without trace context
-    }
+    // Notify clients that analysis is starting
+    wsServer.analysisStart([anomaly.id]);
 
-    // Analyze with Ollama
-    const { analysisService } = await import('./analysis-service');
-    const analysis = await analysisService.analyzeAnomaly(anomaly, fullTrace);
+    // Run analysis in background — structured result arrives via WebSocket
+    // Uses analysisService for rich context enrichment (trace, metrics, logs, topology)
+    // and structured parsing (SUMMARY, CAUSES, RECOMMENDATIONS, CONFIDENCE)
+    analysisService.analyzeAnomaly(anomaly).then(analysis => {
+        wsServer.analysisComplete([anomaly!.id], analysis);
+        logger.info({ traceId, confidence: analysis.confidence }, 'Analysis complete, broadcast via WebSocket');
+    }).catch(err => {
+        const errorMsg = `Analysis failed: ${getErrorMessage(err)}`;
+        wsServer.analysisComplete([anomaly!.id], errorMsg);
+        logger.error({ err, traceId }, 'Background analysis failed');
+    });
 
-    res.json(analysis);
+    res.json({
+        status: 'processing',
+        message: 'Analysis started — structured results will arrive via WebSocket',
+        traceId,
+        anomalyId: anomaly.id
+    });
 });
 
 /**
@@ -876,6 +873,100 @@ router.get('/bayesian/alert-rca', async (_req, res) => {
         logger.error({ err: error }, 'Failed to fetch autonomous alert RCA');
         res.status(502).json({ error: getErrorMessage(error) });
     }
+});
+
+// ============================================
+// Chaos Engineering Routes (Demo Scenarios)
+// ============================================
+
+import { chaosController, SCENARIOS, type ChaosScenarioType } from './chaos-controller';
+
+const CHAOS_API_KEY = process.env.CHAOS_API_KEY || '';
+
+function requireChaosAuth(req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) {
+    if (!CHAOS_API_KEY) {
+        return res.status(403).json({ error: 'Chaos API is disabled. Set CHAOS_API_KEY environment variable to enable.' });
+    }
+    const key = req.headers['x-chaos-key'] as string || req.query.key as string;
+    if (key !== CHAOS_API_KEY) {
+        return res.status(401).json({ error: 'Invalid chaos API key' });
+    }
+    next();
+}
+
+/**
+ * GET /api/monitor/chaos/status
+ * Get current chaos injection state and available scenarios
+ */
+router.get('/chaos/status', requireChaosAuth, (_req, res) => {
+    res.json(chaosController.getStatus());
+});
+
+/**
+ * POST /api/monitor/chaos/start
+ * Start a built-in chaos scenario
+ * Body: { scenario: "latency-spike" | "error-burst" | ..., duration?: number }
+ */
+router.post('/chaos/start', requireChaosAuth, (req, res) => {
+    const { scenario, duration } = req.body;
+
+    if (!scenario) {
+        return res.status(400).json({
+            error: 'scenario is required',
+            availableScenarios: Object.keys(SCENARIOS),
+        });
+    }
+
+    if (!SCENARIOS[scenario as ChaosScenarioType]) {
+        return res.status(400).json({
+            error: `Unknown scenario: ${scenario}`,
+            availableScenarios: Object.keys(SCENARIOS),
+        });
+    }
+
+    try {
+        const config = chaosController.startScenario(scenario as ChaosScenarioType, duration);
+        const scenarioDef = SCENARIOS[scenario as ChaosScenarioType];
+        logger.warn({ scenario, duration: duration || scenarioDef.durationSeconds }, 'Chaos scenario started via API');
+        res.json({
+            success: true,
+            message: `🔥 Scenario "${scenarioDef.name}" started`,
+            description: scenarioDef.description,
+            config,
+        });
+    } catch (error: unknown) {
+        res.status(500).json({ error: getErrorMessage(error) });
+    }
+});
+
+/**
+ * POST /api/monitor/chaos/custom
+ * Start chaos with custom parameters
+ * Body: { delayMs?, errorRate?, errorCode?, targetRoutes?, durationSeconds? }
+ */
+router.post('/chaos/custom', requireChaosAuth, (req, res) => {
+    const { delayMs, errorRate, errorCode, targetRoutes, errorMessage, durationSeconds } = req.body;
+
+    if (!delayMs && !errorRate) {
+        return res.status(400).json({ error: 'At least one of delayMs or errorRate is required' });
+    }
+
+    const config = chaosController.startCustom({
+        delayMs, errorRate, errorCode, targetRoutes, errorMessage, durationSeconds,
+    });
+
+    logger.warn({ delayMs, errorRate, durationSeconds }, 'Custom chaos started via API');
+    res.json({ success: true, message: '🔥 Custom chaos started', config });
+});
+
+/**
+ * POST /api/monitor/chaos/stop
+ * Stop all chaos injection immediately
+ */
+router.post('/chaos/stop', requireChaosAuth, (_req, res) => {
+    const config = chaosController.stop();
+    logger.info('Chaos stopped via API');
+    res.json({ success: true, message: '✅ Chaos stopped — system returning to normal', config });
 });
 
 export default router;

@@ -30,6 +30,8 @@ spec:
               value: {{ .Values.secrets.goalertDbPassword | default "CHANGE_ME" | quote }}
             - name: POSTGRES_DB
               value: "goalert"
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           ports:
             - name: postgres
               containerPort: 5432
@@ -73,7 +75,9 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: {{ .Values.goalert.persistence.storageClass | default "local-storage" }}
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.goalert.persistence.size | default "5Gi" }}
