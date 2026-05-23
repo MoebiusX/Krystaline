@@ -1,6 +1,6 @@
 # KrystalineX
 
-**What happens when you combine a SIFI messaging platform team's engineering discipline with 2026's state‑of‑the‑art AI‑powered observability?**
+**What happens when you combine OpenTelemetry  with 2026's state‑of‑the‑art AI?**
 
 KrystalineX is a production-grade crypto exchange that answers that question. Every trade — from browser click to order matcher decision — is captured in a distributed trace, evaluated by a statistical anomaly engine, diagnosed by a fine-tuned LLM, and verified by zero-knowledge proofs. When something breaks, the system heals itself before a human even notices.
 
