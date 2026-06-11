@@ -4,6 +4,8 @@ Status: Draft
 Audience: Observability experts, SRE leaders, platform engineering leaders, CTO/CIO stakeholders  
 Classification: Public-safe overview
 
+Related narrative: [AI Ops in 2026: The Model Is Not the Monitor](AIOPS_2026_ARTICLE_DRAFT.md)
+
 ## Status Legend
 
 This document separates what exists from what is next. That distinction is part
@@ -56,13 +58,36 @@ the question they are increasingly demanding from platform teams:
 ```mermaid
 flowchart TB
     A["Trade, transfer, proof,<br/>or service event"]
-    B["Telemetry foundation<br/>OpenTelemetry trace<br/>Prometheus metrics<br/>VictoriaMetrics metrics<br/>Structured logs"]
-    C["Detection and state<br/>Anomaly and baseline engine<br/>SLO and alert state"]
-    D["AI SRE context packet<br/>Trace, metrics, logs, topology, alerts<br/>Read-only MCP telemetry tools"]
-    E["RCA output<br/>Hypothesis<br/>Evidence<br/>Next action"]
-    F["Operational consumers<br/>Operator war room<br/>Service manager briefing<br/>Post-incident review<br/>Transparency and proof surface"]
+    B["OpenTelemetry trace"]
+    C["Prometheus / VictoriaMetrics<br/>metrics"]
+    D["Structured logs"]
+    E["Anomaly and baseline<br/>engine"]
+    F["SLO and alert state"]
+    G["AI SRE context packet"]
+    H["Read-only MCP<br/>telemetry tools"]
+    I["RCA hypothesis, evidence,<br/>and next action"]
+    J["Operator war room"]
+    K["Service manager briefing"]
+    L["Post-incident review"]
+    M["Public transparency<br/>and proof surface"]
 
-    A --> B --> C --> D --> E --> F
+    A --> B
+    A --> C
+    A --> D
+    B --> E
+    C --> E
+    D --> E
+    E --> F
+    F --> G
+    B --> G
+    C --> G
+    D --> G
+    H --> G
+    G --> I
+    I --> J
+    I --> K
+    I --> L
+    B --> M
 ```
 
 The system is strongest when every box is evidence-backed. The GenAI layer is

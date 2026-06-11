@@ -35,6 +35,7 @@ naming policy.
 |---|---|
 | [Live Lab](https://www.krystaline.io) | Public demo environment. |
 | [GenAI Observability Solution](docs/GENAI_OBSERVABILITY_SOLUTION.md) | AI SRE thesis, service-manager use case, Core/public boundaries. |
+| [AI Ops 2026 Article Draft](docs/AIOPS_2026_ARTICLE_DRAFT.md) | Medium/LinkedIn-style narrative for how GenAI monitoring and AI-assisted operations work. |
 | [Demo Walkthrough](docs/product/03_DEMO_WALKTHROUGH.md) | Guided 15-minute product tour. |
 | [Getting Started](docs/GETTING_STARTED.md) | Local setup, repo map, and useful commands. |
 | [Architecture](docs/architecture/01_ARCHITECTURE.md) | System design, data flow, and service interactions. |
@@ -82,13 +83,36 @@ paging, and human authority at the center.
 ```mermaid
 flowchart TB
     A["Trade, transfer, proof,<br/>or service event"]
-    B["Telemetry foundation<br/>OpenTelemetry trace<br/>Prometheus metrics<br/>VictoriaMetrics metrics<br/>Structured logs"]
-    C["Detection and state<br/>Anomaly and baseline engine<br/>SLO and alert state"]
-    D["AI SRE context packet<br/>Trace, metrics, logs, topology, alerts<br/>Read-only MCP telemetry tools"]
-    E["RCA output<br/>Hypothesis<br/>Evidence<br/>Next action"]
-    F["Operational consumers<br/>Operator war room<br/>Service manager briefing<br/>Post-incident review<br/>Transparency and proof surface"]
+    B["OpenTelemetry trace"]
+    C["Prometheus / VictoriaMetrics<br/>metrics"]
+    D["Structured logs"]
+    E["Anomaly and baseline<br/>engine"]
+    F["SLO and alert state"]
+    G["AI SRE context packet"]
+    H["Read-only MCP<br/>telemetry tools"]
+    I["RCA hypothesis, evidence,<br/>and next action"]
+    J["Operator war room"]
+    K["Service manager briefing"]
+    L["Post-incident review"]
+    M["Public transparency<br/>and proof surface"]
 
-    A --> B --> C --> D --> E --> F
+    A --> B
+    A --> C
+    A --> D
+    B --> E
+    C --> E
+    D --> E
+    E --> F
+    F --> G
+    B --> G
+    C --> G
+    D --> G
+    H --> G
+    G --> I
+    I --> J
+    I --> K
+    I --> L
+    B --> M
 ```
 
 The strongest version of this system is evidence-backed at every layer. GenAI
@@ -324,6 +348,7 @@ see [Getting Started](docs/GETTING_STARTED.md).
 
 | Guide | Description |
 |---|---|
+| [AI Ops 2026 Article Draft](docs/AIOPS_2026_ARTICLE_DRAFT.md) | Shareable Medium/LinkedIn-style draft explaining how GenAI monitoring and AI-assisted operations work in 2026. |
 | [GenAI Observability Solution](docs/GENAI_OBSERVABILITY_SOLUTION.md) | AI SRE thesis, service-manager control, Core/public status, governance boundaries. |
 | [Brand Positioning](docs/BRAND_POSITIONING.md) | Naming architecture for Krystaline, the lab, Core, and legacy runtime IDs. |
 | [Public Documentation Catalog](docs/PUBLIC_DOCUMENTS.md) | Public-safe document plan, audience map, and redaction boundaries. |
