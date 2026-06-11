@@ -14,16 +14,16 @@ This folder contains mermaid source files (`*.mmd`) used to render diagrams embe
 3. (Optional) Generate all diagrams with the convenience npm script:
    - `npm run render:diagrams` (requires Node >= 14)
 5. One-command export (recommended):
-   - `npm run docs:build` will render diagrams, create `docs/traces-and-anomaly.html` and `docs/traces-and-anomaly.pdf` in a single step.
+   - `npm run docs:build` will render diagrams and create documentation artifacts in a single step.
 4. Convert markdown to HTML/PDF (two simple options):
 
   Option A (Pandoc → Chrome for PDF):
-    - `pandoc docs/TRACES-AND-ANOMALY-MONITORING.md -o docs/traces-and-anomaly.html --standalone`
+    - `pandoc docs/archive/legacy-traces-and-anomaly-monitoring.md -o docs/traces-and-anomaly.html --standalone`
     - Serve and print with Chrome headless: `npx http-server . -p 8000` then `chrome --headless --disable-gpu --print-to-pdf=docs/traces-and-anomaly.pdf http://localhost:8000/docs/traces-and-anomaly.html`
 
   Option B (md-to-pdf):
     - `npm i -g md-to-pdf`
-    - `md-to-pdf docs/TRACES-AND-ANOMALY-MONITORING.md --output docs/traces-and-anomaly.pdf`
+    - `md-to-pdf docs/archive/legacy-traces-and-anomaly-monitoring.md --output docs/traces-and-anomaly.pdf`
 
 Notes:
 - The easiest interactive option is using VS Code Markdown Preview (or the Markdown Preview Enhanced extension) to export to PDF and it will render mermaid natively.

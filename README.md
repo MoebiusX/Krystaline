@@ -80,24 +80,15 @@ paging, and human authority at the center.
 ## One-Page Visual
 
 ```mermaid
-flowchart LR
-    A["Trade, transfer, proof, or service event"] --> B["OpenTelemetry trace"]
-    A --> C["Prometheus / VictoriaMetrics metrics"]
-    A --> D["Structured logs"]
-    B --> E["Anomaly and baseline engine"]
-    C --> E
-    D --> E
-    E --> F["SLO and alert state"]
-    F --> G["AI SRE context packet"]
-    B --> G
-    C --> G
-    D --> G
-    H["Read-only MCP telemetry tools"] --> G
-    G --> I["RCA hypothesis, evidence, and next action"]
-    I --> J["Operator war room"]
-    I --> K["Service manager briefing"]
-    I --> L["Post-incident review"]
-    B --> M["Public transparency and proof surface"]
+flowchart TB
+    A["Trade, transfer, proof,<br/>or service event"]
+    B["Telemetry foundation<br/>OpenTelemetry trace<br/>Prometheus metrics<br/>VictoriaMetrics metrics<br/>Structured logs"]
+    C["Detection and state<br/>Anomaly and baseline engine<br/>SLO and alert state"]
+    D["AI SRE context packet<br/>Trace, metrics, logs, topology, alerts<br/>Read-only MCP telemetry tools"]
+    E["RCA output<br/>Hypothesis<br/>Evidence<br/>Next action"]
+    F["Operational consumers<br/>Operator war room<br/>Service manager briefing<br/>Post-incident review<br/>Transparency and proof surface"]
+
+    A --> B --> C --> D --> E --> F
 ```
 
 The strongest version of this system is evidence-backed at every layer. GenAI

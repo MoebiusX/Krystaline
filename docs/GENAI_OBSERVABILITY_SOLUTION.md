@@ -54,24 +54,15 @@ the question they are increasingly demanding from platform teams:
 ## One-Page Visual
 
 ```mermaid
-flowchart LR
-    A["Trade, transfer, proof, or service event"] --> B["OpenTelemetry trace"]
-    A --> C["Prometheus / VictoriaMetrics metrics"]
-    A --> D["Structured logs"]
-    B --> E["Anomaly + baseline engine"]
-    C --> E
-    D --> E
-    E --> F["SLO and alert state"]
-    F --> G["AI SRE context packet"]
-    B --> G
-    C --> G
-    D --> G
-    H["MCP read-only tools"] --> G
-    G --> I["RCA hypothesis + evidence + next action"]
-    I --> J["Operator war-room"]
-    I --> K["Service manager briefing"]
-    I --> L["Post-incident review"]
-    B --> M["Public transparency and proof surface"]
+flowchart TB
+    A["Trade, transfer, proof,<br/>or service event"]
+    B["Telemetry foundation<br/>OpenTelemetry trace<br/>Prometheus metrics<br/>VictoriaMetrics metrics<br/>Structured logs"]
+    C["Detection and state<br/>Anomaly and baseline engine<br/>SLO and alert state"]
+    D["AI SRE context packet<br/>Trace, metrics, logs, topology, alerts<br/>Read-only MCP telemetry tools"]
+    E["RCA output<br/>Hypothesis<br/>Evidence<br/>Next action"]
+    F["Operational consumers<br/>Operator war room<br/>Service manager briefing<br/>Post-incident review<br/>Transparency and proof surface"]
+
+    A --> B --> C --> D --> E --> F
 ```
 
 The system is strongest when every box is evidence-backed. The GenAI layer is
@@ -211,6 +202,33 @@ This is the kind of dashboard surface that makes the project feel real: it does
 not just say "we have AI." It shows whether the AI path is healthy, late,
 expensive, noisy, degraded, or blind.
 
+## Hosted Analyzer Runtime Evidence
+
+The same rule applies when part of the GenAI or anomaly-analysis path is hosted
+outside the core cluster: the provider/runtime surface has to be observable too.
+The hosted anomaly analyzer analytics view below shows the kind of live evidence
+that matters for an externalized analysis component: request volume, HTTP status
+mix, pending requests, latency percentiles, and replica state.
+
+![Hosted anomaly analyzer analytics showing requests, pending requests, latency distribution, and running replicas](assets/hosted-anomaly-analyzer-analytics.png)
+
+Read this screenshot as provider-runtime evidence, not as a change to the
+default production claim. The documented default RCA path remains local-first.
+External endpoints are valuable when they are configured deliberately and
+governed with the same controls as any other production dependency:
+
+| Runtime signal | Why it matters |
+|---|---|
+| HTTP status mix | Confirms whether the analyzer is producing clean responses or hiding 4XX/5XX failure modes. |
+| Pending requests | Reveals queue pressure and early saturation before operators only see timeout symptoms. |
+| P99/P95/P90/median latency | Shows whether the analyzer can return answers inside incident-response time budgets. |
+| Replica state | Confirms whether capacity is actually online, initializing, or capped at the current maximum. |
+
+This is the practical governance point: external inference or hosted analysis is
+not automatically less trustworthy, but it must be measured. If the model path
+is slow, saturated, blind, or failing, the operator should see that before
+treating its RCA output as useful.
+
 ## Current Reality Matrix
 
 | Area | Already there | Still backlog | Aspirational / do not overclaim |
@@ -231,6 +249,7 @@ We should be precise about model externalization:
 | Is RCA currently presented as externalized to Hugging Face Inference Endpoints? | No. The documented, evidenced default remains local Ollama-backed RCA. |
 | Does Core support a Hugging Face endpoint path? | Yes. Core has deploy-time provider plumbing for `GENAI_PROVIDER=huggingface` with `GENAI_BASE_URL` pointing at a compatible endpoint. |
 | Is that the same as customer BYOK? | No. Customer self-service BYOK needs tenant-scoped key storage, audit events, spend limits, and security review. |
+| How should the hosted analyzer screenshot be described? | "Provider/runtime observability evidence for an optional external analysis path, not the default RCA deployment claim." |
 | What should we say publicly? | "Local-first by default; external provider routing is supported as a controlled deployment option; production rollout and governance remain backlog." |
 
 For large-scale deployments that are not processing financial data or similarly

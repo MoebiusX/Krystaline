@@ -12,14 +12,9 @@ A compact, Medium-style walkthrough that explains the tracing decisions we made 
 
 ---
 
-![Trace Hierarchy](images/trace-hierarchy.png)
-
-*Figure: Trace flow and context propagation (Browser → Gateway → API → RabbitMQ → Worker).* 
-
-
-![Baseline Calculation](images/baseline-calculation.png)
-
-*Figure: Nightly baseline calculation and real-time detection pipeline.*
+Legacy note: the original draft referenced trace-hierarchy and baseline
+calculation figures that are not present in the current public docs asset set.
+Use the current observability guides for maintained diagrams.
 
 ---
 
