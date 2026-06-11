@@ -47,18 +47,7 @@ What changes is the speed of understanding.
 
 ## The 2026 AI Ops control loop
 
-```mermaid
-flowchart TB
-    A["Production event<br/>trade, transfer, proof, request,<br/>deployment, or dependency change"]
-    B["Telemetry foundation<br/>traces, metrics, logs,<br/>events, topology, SLO state"]
-    C["Detection layer<br/>alerts, anomaly baselines,<br/>burn-rate rules, queue pressure"]
-    D["Context builder<br/>collect relevant evidence<br/>before asking the model"]
-    E["AI SRE analysis<br/>hypothesis, evidence,<br/>blast radius, next validation"]
-    F["Human operating surface<br/>on-call, service manager,<br/>incident channel, postmortem"]
-    G["Governance loop<br/>feedback, correction,<br/>policy, approval, audit"]
-
-    A --> B --> C --> D --> E --> F --> G
-```
+The loop runs in one direction: a production event lands in the telemetry foundation, the detection layer flags abnormal behavior, a context builder assembles the evidence, the AI layer proposes a bounded hypothesis, humans act on it, and a governance loop feeds corrections back into the system.
 
 This loop is the difference between "AI says something" and "AI assists operations."
 
@@ -75,49 +64,6 @@ The pattern is straightforward:
 7. Measure whether the AI path was fast, useful, and correct.
 
 When any of those steps is missing, the result is not AI Ops. It is an expensive autocomplete attached to an incident channel.
-
-## A practical case: from baseline anomaly to bounded RCA
-
-This is what the control loop looks like in practice.
-
-In the Krystaline monitor, the system first establishes a statistical baseline from recent production traces. In one run, the monitor calculated 44 baselines from 5,094 spans before presenting live analysis. That matters because the AI layer is not being asked to decide what is normal from scratch. The telemetry system has already built the operating context.
-
-![Krystaline live monitor showing baseline calculation, live analysis, service health, and active SEV1 alerts](assets/krystaline-live-monitor.png)
-
-*Krystaline live monitor showing baseline calculation, fleet-level analysis, service health, and active SEV1 alerts.*
-
-The monitor then exposes the operational state: service health, active alerts, severity, affected services, and trace links. In the example, `kx-exchange` and `kx-wallet` are marked critical while `kx-matcher` remains healthy. The alert surface shows SEV1 events tied to `kx-wallet` HTTP requests, with observed latency around 2.4 seconds — roughly 55 times the baseline mean.
-
-A detail worth noticing: `kx-exchange` is flagged critical at a lower average latency than the healthy `kx-matcher`. Health here is relative to each service's own learned baseline, not an absolute threshold — which is exactly why the baseline step matters.
-
-This is the first important boundary: deterministic monitoring identifies the abnormal condition before the model explains it.
-
-The live analysis layer then provides a fleet-level interpretation. In this case, the system identifies DNS lookup latency as a likely upstream resolver delay rather than a local service failure. That is useful, but it is still a hypothesis attached to evidence, not an autonomous decision.
-
-From there, the operator can pivot into a specific trace. Note that the trace-level analysis below reaches a different hypothesis than the fleet-level one — and that is by design. Each layer reasons over its own evidence scope, the disagreement is visible rather than hidden, and the operator arbitrates with the traces in front of them.
-
-![Trace-level AI analysis showing elevated latency, possible causes, recommendations, confidence, and feedback](assets/krystaline-trace-ai-analysis.png)
-
-*Trace-level AI analysis showing a bounded RCA hypothesis, possible causes, recommended controls, confidence, and operator feedback.*
-
-At the trace level, the AI analysis becomes more concrete. The selected trace shows a 2.2σ latency event across 18 elevated spans, with observed latency of roughly 1.6 seconds against an expected path of about 7 milliseconds. The model summarizes the likely pattern as gateway timeout propagation, with possible `kx-wallet` authentication retry behavior and retry amplification across the request chain.
-
-The useful part is not that the model produced text. The useful part is that the output is bounded:
-
-- it is attached to a trace;
-- it names the affected path;
-- it separates possible causes from recommendations;
-- it reports medium confidence instead of asserting certainty;
-- it leaves the operator with validation steps;
-- it captures human feedback on whether the analysis was good or bad, and each rating becomes a collected example for evaluating the AI path itself.
-
-That is the difference between AI-assisted operations and a chatbot beside a dashboard.
-
-The recommendation is also operationally shaped rather than magical: add circuit breaking to fail fast before gateway propagation, add bulkhead isolation to limit retry amplification, and monitor gateway latency jitter so timeout bursts can be detected earlier.
-
-The model does not replace the monitor, the alert, the trace, or the operator. It compresses the time between evidence collection and operational understanding.
-
-Walk back through the control loop and every step is present: the telemetry foundation built the baselines, the detection layer raised the SEV1 alerts, the context builder assembled the trace and its correlated metrics, the model produced a bounded hypothesis, the operator kept the deciding role, and the feedback loop recorded whether the analysis earned trust. Nothing in that chain depends on the model being right — it depends on the model being inspectable.
 
 ## What GenAI monitoring actually means
 
@@ -339,6 +285,49 @@ For teams trying to build this, the path is not mysterious:
 12. Treat missing telemetry as a red signal, not an empty panel.
 
 That is how teams move from observability to AI-assisted operations without turning the model into an unaccountable control plane.
+
+## A practical case: from baseline anomaly to bounded RCA
+
+Everything above is the operating model. This is what it looks like in practice, end to end, in the Krystaline monitor.
+
+The system first establishes a statistical baseline from recent production traces. In one run, the monitor calculated 44 baselines from 5,094 spans before presenting live analysis. That matters because the AI layer is not being asked to decide what is normal from scratch. The telemetry system has already built the operating context.
+
+![Krystaline live monitor showing baseline calculation, live analysis, service health, and active SEV1 alerts](assets/krystaline-live-monitor.png)
+
+*Krystaline live monitor showing baseline calculation, fleet-level analysis, service health, and active SEV1 alerts.*
+
+The monitor then exposes the operational state: service health, active alerts, severity, affected services, and trace links. In the example, `kx-exchange` and `kx-wallet` are marked critical while `kx-matcher` remains healthy. The alert surface shows SEV1 events tied to `kx-wallet` HTTP requests, with observed latency around 2.4 seconds — roughly 55 times the baseline mean.
+
+A detail worth noticing: `kx-exchange` is flagged critical at a lower average latency than the healthy `kx-matcher`. Health here is relative to each service's own learned baseline, not an absolute threshold — which is exactly why the baseline step matters.
+
+This is the first important boundary: deterministic monitoring identifies the abnormal condition before the model explains it.
+
+The live analysis layer then provides a fleet-level interpretation. In this case, the system identifies DNS lookup latency as a likely upstream resolver delay rather than a local service failure. That is useful, but it is still a hypothesis attached to evidence, not an autonomous decision.
+
+From there, the operator can pivot into a specific trace. Note that the trace-level analysis below reaches a different hypothesis than the fleet-level one — and that is by design. Each layer reasons over its own evidence scope, the disagreement is visible rather than hidden, and the operator arbitrates with the traces in front of them.
+
+![Trace-level AI analysis showing elevated latency, possible causes, recommendations, confidence, and feedback](assets/krystaline-trace-ai-analysis.png)
+
+*Trace-level AI analysis showing a bounded RCA hypothesis, possible causes, recommended controls, confidence, and operator feedback.*
+
+At the trace level, the AI analysis becomes more concrete. The selected trace shows a 2.2σ latency event across 18 elevated spans, with observed latency of roughly 1.6 seconds against an expected path of about 7 milliseconds. The model summarizes the likely pattern as gateway timeout propagation, with possible `kx-wallet` authentication retry behavior and retry amplification across the request chain.
+
+The useful part is not that the model produced text. The useful part is that the output is bounded:
+
+- it is attached to a trace;
+- it names the affected path;
+- it separates possible causes from recommendations;
+- it reports medium confidence instead of asserting certainty;
+- it leaves the operator with validation steps;
+- it captures human feedback on whether the analysis was good or bad, and each rating becomes a collected example for evaluating the AI path itself.
+
+That is the difference between AI-assisted operations and a chatbot beside a dashboard.
+
+The recommendation is also operationally shaped rather than magical: add circuit breaking to fail fast before gateway propagation, add bulkhead isolation to limit retry amplification, and monitor gateway latency jitter so timeout bursts can be detected earlier.
+
+The model does not replace the monitor, the alert, the trace, or the operator. It compresses the time between evidence collection and operational understanding.
+
+Walk back through the control loop and every step is present: the telemetry foundation built the baselines, the detection layer raised the SEV1 alerts, the context builder assembled the trace and its correlated metrics, the model produced a bounded hypothesis, the operator kept the deciding role, and the feedback loop recorded whether the analysis earned trust. Nothing in that chain depends on the model being right — it depends on the model being inspectable.
 
 ## Closing
 
