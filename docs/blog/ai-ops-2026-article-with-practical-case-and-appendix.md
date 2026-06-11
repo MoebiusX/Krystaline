@@ -368,4 +368,4 @@ In one sentence: the standard defines the contract, the gateway exposes live evi
 - OpenTelemetry: [Semantic conventions for generative AI metrics](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/)
 - OpenTelemetry: [Semantic conventions for generative client AI spans](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/)
 - OpenTelemetry: [Semantic conventions for Model Context Protocol (MCP)](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/)
-- Krystaline Observability Lab: [GenAI Observability Solution](GENAI_OBSERVABILITY_SOLUTION.md)
+- Krystaline Observability Lab: [GenAI Observability Solution](../GENAI_OBSERVABILITY_SOLUTION.md)
