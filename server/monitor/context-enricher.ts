@@ -455,7 +455,7 @@ async function gatherMetrics(tsEpoch: number): Promise<TraceContext['metrics']> 
 export function buildRCAPrompt(ctx: TraceContext): string {
   const s: string[] = [];
 
-  s.push(`You are an expert SRE analyzing a trace from KrystalineX, an institutional crypto exchange.`);
+  s.push(`You are an expert SRE analyzing a trace from Krystaline, an institutional crypto and DeFi observability lab.`);
 
   // Anomaly hint (if available from the detector)
   if (ctx.anomalyHint) {

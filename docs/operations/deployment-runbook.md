@@ -1,7 +1,7 @@
-# KrystalineX Deployment Runbook
+# Krystaline Deployment Runbook
 
 Audience: SRE / platform engineers.
-Scope: deploy, verify, and roll back KrystalineX via Docker Compose (demo/dev) or Kubernetes (staging/prod). Includes observability smoke tests.
+Scope: deploy, verify, and roll back Krystaline via Docker Compose (demo/dev) or Kubernetes (staging/prod). Includes observability smoke tests.
 
 ## 0) Prerequisites
 - Secrets: DB, Kong, RabbitMQ, JWT, email, Goalert, OTEL endpoints; provide via env files or secret stores (Vault/Kubernetes Secrets).

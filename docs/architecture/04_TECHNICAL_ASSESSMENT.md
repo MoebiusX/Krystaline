@@ -1,4 +1,4 @@
-# KrystalineX Technical Assessment
+# Krystaline Technical Assessment
 > **Generated:** 2026-02-06  
 > **Assessment Method:** Static review + prior test results (tests not rerun this pass)  
 > **Status:** ⚠️ Partially verified (see testing section)
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-KrystalineX is a **demo-ready crypto exchange platform** with exceptional observability, security, and monitoring capabilities. The backend demonstrates professional-grade engineering with extensive test coverage (931 tests), proper security middleware, and a sophisticated anomaly detection system. The frontend requires polish for production but is sufficient for investor demos.
+Krystaline is a **demo-ready crypto exchange platform** with exceptional observability, security, and monitoring capabilities. The backend demonstrates professional-grade engineering with extensive test coverage (931 tests), proper security middleware, and a sophisticated anomaly detection system. The frontend requires polish for production but is sufficient for investor demos.
 
 ### Overall Health Score: **83/100**
 
@@ -428,7 +428,7 @@ Features:
 
 ## Conclusion
 
-KrystalineX has a **rock-solid backend** with exceptional observability—the core value proposition is fully realized. However, the frontend needs UI/UX polish before it can be called production-ready.
+Krystaline has a **rock-solid backend** with exceptional observability—the core value proposition is fully realized. However, the frontend needs UI/UX polish before it can be called production-ready.
 
 ### Strengths
 1. **Production-grade security** - Rate limiting, helmet, bcrypt, JWT

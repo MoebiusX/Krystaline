@@ -1,5 +1,5 @@
 /**
- * KrystalineX Dashboard Validator
+ * Krystaline Dashboard Validator
  *
  * Production-grade tool that validates every Grafana dashboard panel
  * against live Prometheus data. Catches empty panels, stale data,
@@ -621,7 +621,7 @@ function printReport(panelResults, freshness, semanticViolations) {
     }
 
     console.log(`\n${c.bold}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${c.reset}`);
-    console.log(`${c.bold}  🔍 KrystalineX Dashboard Validator${c.reset}`);
+    console.log(`${c.bold}  🔍 Krystaline Dashboard Validator${c.reset}`);
     console.log(`${c.bold}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${c.reset}`);
     console.log(`  Target: ${config.isRemote ? '🌐 K8s' : '🏠 Local'}  Prometheus: ${PROM_URL}${lokiAvailable ? `  Loki: ✅` : ''}`);
     console.log(`  Panels: ${panelResults.length}  Queries: ${panelResults.reduce((a, p) => a + (p.queryResults?.length || p.targets.length), 0)}`);

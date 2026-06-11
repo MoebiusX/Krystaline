@@ -1,4 +1,4 @@
-# KrystalineX — Demo Script
+# Krystaline — Demo Script
 
 > **Duration:** 20 minutes (30 with Q&A)  
 > **Audience:** Fintech CTOs, observability architects, technical investors  

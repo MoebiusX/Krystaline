@@ -1,4 +1,4 @@
-# Krystaline Exchange Repository Summary
+# Krystaline Observability Lab Repository Summary
 
 ## Purpose
 

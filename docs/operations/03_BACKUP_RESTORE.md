@@ -1,4 +1,4 @@
-# KrystalineX Backup & Restore Procedures
+# Krystaline Backup & Restore Procedures
 
 **Version:** 1.0  
 **Last Updated:** February 2, 2026  
@@ -230,7 +230,7 @@ Create `scripts/backup-databases.ps1`:
 
 ```powershell
 #!/usr/bin/env pwsh
-# Automated database backup script for KrystalineX
+# Automated database backup script for Krystaline
 
 param(
     [string]$BackupDir = "./backups",
@@ -300,15 +300,15 @@ Write-Host "✅ Backup completed at $(Get-Date)"
 ```powershell
 # Create scheduled task for automated backups every 6 hours
 $action = New-ScheduledTaskAction -Execute "pwsh.exe" `
-    -Argument "-File C:\Users\bizai\Documents\GitHub\KrystalineX\scripts\backup-databases.ps1"
+    -Argument "-File C:\Users\bizai\Documents\GitHub\Krystaline\scripts\backup-databases.ps1"
 
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 6)
 
 $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount
 
-Register-ScheduledTask -TaskName "KrystalineX-DatabaseBackup" `
+Register-ScheduledTask -TaskName "Krystaline-DatabaseBackup" `
     -Action $action -Trigger $trigger -Principal $principal `
-    -Description "Automated PostgreSQL backup for KrystalineX"
+    -Description "Automated PostgreSQL backup for Krystaline"
 ```
 
 ### 5.3 Kubernetes CronJob
@@ -409,7 +409,7 @@ Get-ChildItem -Path "./backups" -Filter "crypto_exchange-*.dump" |
 ```powershell
 # Send notification via ntfy
 curl -X POST "https://ntfy.sh/$env:NTFY_TOPIC" `
-  -H "Title: 🔴 DR INITIATED: KrystalineX" `
+  -H "Title: 🔴 DR INITIATED: Krystaline" `
   -H "Priority: urgent" `
   -H "Tags: rotating_light,disaster" `
   -d "Database recovery in progress. ETA: 30 minutes. Last backup: [TIMESTAMP]"

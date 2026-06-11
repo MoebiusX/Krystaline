@@ -3,7 +3,7 @@
 # Idempotently provisions GoAlert with:
 #   - Admin user + basic auth
 #   - Carlos user (on-call engineer)
-#   - KrystalineX service with escalation policy
+#   - Krystaline service with escalation policy
 #   - Alertmanager integration keys (general, critical, security)
 #   - Twilio SMS config (if credentials provided)
 #
@@ -195,14 +195,16 @@ print(admin[0]['id'] if admin else 'NONE')
 ")
 log "Admin user ID: $ADMIN_ID"
 
-# ── Phase 5: Create KrystalineX service ───────────────────────
-info "Phase 5: Provisioning KrystalineX service..."
+# ── Phase 5: Create Krystaline service ───────────────────────
+info "Phase 5: Provisioning Krystaline service..."
 
-# Check if service already exists
+# Prefer the new service name, but reuse the legacy service if it already exists.
 SVC_CHECK=$(gql "{ services { nodes { id name } } }" | jq_py "
 svcs = d.get('data',{}).get('services',{}).get('nodes',[])
-kx = [s for s in svcs if s.get('name') == 'KrystalineX']
-print(kx[0]['id'] if kx else 'NONE')
+new = [s for s in svcs if s.get('name') == 'Krystaline']
+legacy = [s for s in svcs if s.get('name') == 'KrystalineX']
+hit = new[0] if new else (legacy[0] if legacy else None)
+print(hit['id'] if hit else 'NONE')
 ")
 
 if [ "$SVC_CHECK" = "NONE" ]; then
@@ -213,11 +215,11 @@ if [ "$SVC_CHECK" = "NONE" ]; then
   fi
   TARGETS="${TARGETS}]"
 
-  SVC_RESULT=$(gql "mutation { createService(input: { name: \\\"KrystalineX\\\", description: \\\"KrystalineX Crypto Exchange - Observability Alerts\\\", newEscalationPolicy: { name: \\\"KrystalineX On-Call\\\", description: \\\"Primary escalation for KrystalineX alerts\\\", repeat: 3, steps: [{ delayMinutes: 5, targets: ${TARGETS} }] }, newIntegrationKeys: [{ type: prometheusAlertmanager, name: \\\"Alertmanager - General\\\" }, { type: prometheusAlertmanager, name: \\\"Alertmanager - Critical\\\" }, { type: generic, name: \\\"Alertmanager - Security\\\" }] }) { id name integrationKeys { id name type } escalationPolicy { id name } } }")
+  SVC_RESULT=$(gql "mutation { createService(input: { name: \\\"Krystaline\\\", description: \\\"Krystaline Observability Lab - Alerts\\\", newEscalationPolicy: { name: \\\"Krystaline On-Call\\\", description: \\\"Primary escalation for Krystaline alerts\\\", repeat: 3, steps: [{ delayMinutes: 5, targets: ${TARGETS} }] }, newIntegrationKeys: [{ type: prometheusAlertmanager, name: \\\"Alertmanager - General\\\" }, { type: prometheusAlertmanager, name: \\\"Alertmanager - Critical\\\" }, { type: generic, name: \\\"Alertmanager - Security\\\" }] }) { id name integrationKeys { id name type } escalationPolicy { id name } } }")
 
   SVC_ID=$(echo "$SVC_RESULT" | jq_py "print(d['data']['createService']['id'])" || echo "")
   if [ -n "$SVC_ID" ]; then
-    log "Service 'KrystalineX' created (ID: $SVC_ID)"
+    log "Service 'Krystaline' created (ID: $SVC_ID)"
     echo "$SVC_RESULT" | jq_py "
 svc = d['data']['createService']
 print()
@@ -233,7 +235,7 @@ print('  Escalation Policy: ' + ep['name'] + ' (' + ep['id'] + ')')
   fi
 else
   SVC_ID="$SVC_CHECK"
-  log "Service 'KrystalineX' already exists (ID: $SVC_ID)"
+  log "Service 'Krystaline' or legacy service already exists (ID: $SVC_ID)"
   gql "{ service(id: \\\"${SVC_ID}\\\") { integrationKeys { id name type } } }" | jq_py "
 svc = d['data']['service']
 print('  Integration Keys:')
@@ -247,8 +249,10 @@ info "Phase 6: Provisioning on-call schedule..."
 
 SCHED_CHECK=$(gql "{ schedules { nodes { id name } } }" | jq_py "
 scheds = d.get('data',{}).get('schedules',{}).get('nodes',[])
-kx = [s for s in scheds if s.get('name') == 'KrystalineX On-Call']
-print(kx[0]['id'] if kx else 'NONE')
+new = [s for s in scheds if s.get('name') == 'Krystaline On-Call']
+legacy = [s for s in scheds if s.get('name') == 'KrystalineX On-Call']
+hit = new[0] if new else (legacy[0] if legacy else None)
+print(hit['id'] if hit else 'NONE')
 ")
 
 if [ "$SCHED_CHECK" = "NONE" ]; then
@@ -260,11 +264,11 @@ if [ "$SCHED_CHECK" = "NONE" ]; then
   fi
   TODAY=$(date -u +"%Y-%m-%dT00:00:00Z" 2>/dev/null || date -Iseconds | sed 's/T.*/T00:00:00Z/')
 
-  SCHED_RESULT=$(gql "mutation { createSchedule(input: { name: \\\"KrystalineX On-Call\\\", description: \\\"Primary on-call schedule for KrystalineX platform\\\", timeZone: \\\"Europe/Amsterdam\\\", targets: [{ newRotation: { name: \\\"Daily Shift\\\", description: \\\"Daily on-call rotation\\\", timeZone: \\\"Europe/Amsterdam\\\", type: daily, shiftLength: 1, start: \\\"${TODAY}\\\", userIDs: ${ROTATION_USERS} }, rules: [{ start: \\\"00:00\\\", end: \\\"00:00\\\", weekdayFilter: [true, true, true, true, true, true, true] }] }] }) { id name targets { target { id name type } rules { start end weekdayFilter } } } }")
+  SCHED_RESULT=$(gql "mutation { createSchedule(input: { name: \\\"Krystaline On-Call\\\", description: \\\"Primary on-call schedule for Krystaline platform\\\", timeZone: \\\"Europe/Amsterdam\\\", targets: [{ newRotation: { name: \\\"Daily Shift\\\", description: \\\"Daily on-call rotation\\\", timeZone: \\\"Europe/Amsterdam\\\", type: daily, shiftLength: 1, start: \\\"${TODAY}\\\", userIDs: ${ROTATION_USERS} }, rules: [{ start: \\\"00:00\\\", end: \\\"00:00\\\", weekdayFilter: [true, true, true, true, true, true, true] }] }] }) { id name targets { target { id name type } rules { start end weekdayFilter } } } }")
 
   SCHED_ID=$(echo "$SCHED_RESULT" | jq_py "print(d['data']['createSchedule']['id'])" || echo "")
   if [ -n "$SCHED_ID" ]; then
-    log "Schedule 'KrystalineX On-Call' created (ID: $SCHED_ID)"
+    log "Schedule 'Krystaline On-Call' created (ID: $SCHED_ID)"
     echo "$SCHED_RESULT" | jq_py "
 sched = d['data']['createSchedule']
 for t in sched.get('targets', []):
@@ -279,7 +283,7 @@ for t in sched.get('targets', []):
   fi
 else
   SCHED_ID="$SCHED_CHECK"
-  log "Schedule 'KrystalineX On-Call' already exists (ID: $SCHED_ID)"
+  log "Schedule 'Krystaline On-Call' or legacy schedule already exists (ID: $SCHED_ID)"
 fi
 
 # ── Phase 7: Twilio config via GraphQL ─────────────────────────

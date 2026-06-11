@@ -2,7 +2,7 @@
 
 ## Reporting Vulnerabilities
 
-If you discover a security vulnerability in KrystalineX, please report it responsibly:
+If you discover a security vulnerability in Krystaline, please report it responsibly:
 
 1. **Do NOT** create a public GitHub issue
 2. Email security concerns to: security@krystaline.io

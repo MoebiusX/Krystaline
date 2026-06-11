@@ -1,4 +1,4 @@
-# KrystalineX Prometheus Alerting Rules
+# Krystaline Prometheus Alerting Rules
 # Configure Alertmanager to route these alerts to GoAlert webhook
 
 groups:
@@ -22,7 +22,7 @@ groups:
         annotations:
           summary: "High error rate detected"
           description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#62-high-latency"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#62-high-latency"
 
       # High Latency P99
       - alert: HighLatencyP99
@@ -37,7 +37,7 @@ groups:
         annotations:
           summary: "High P99 latency detected"
           description: "P99 latency is {{ $value | humanizeDuration }} (threshold: 2s)"
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#62-high-latency"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#62-high-latency"
 
       # High Latency P99 Critical
       - alert: HighLatencyP99Critical
@@ -63,7 +63,7 @@ groups:
         annotations:
           summary: "Service {{ $labels.job }} is down"
           description: "The {{ $labels.job }} service has been unreachable for more than 1 minute"
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#61-service-wont-start"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#61-service-wont-start"
 
       # No Traffic (potential issue)
       - alert: NoTraffic
@@ -105,7 +105,7 @@ groups:
         annotations:
           summary: "Order queue is backing up"
           description: "{{ $value }} orders waiting in queue (threshold: 100)"
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#63-rabbitmq-queue-backup"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#63-rabbitmq-queue-backup"
 
       # Order Queue Critical
       - alert: OrderQueueCritical
@@ -147,7 +147,7 @@ groups:
         annotations:
           summary: "PostgreSQL is down"
           description: "PostgreSQL database is not responding"
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#61-service-wont-start"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#61-service-wont-start"
 
       # High Connection Usage
       - alert: DatabaseConnectionsHigh
@@ -160,7 +160,7 @@ groups:
         annotations:
           summary: "Database connection pool nearly exhausted"
           description: "{{ $value | humanizePercentage }} of connections in use"
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#64-database-connection-exhausted"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#64-database-connection-exhausted"
 
       # Database Connection Critical
       - alert: DatabaseConnectionsCritical
@@ -278,7 +278,7 @@ groups:
         annotations:
           summary: "High memory usage on {{ $labels.instance }}"
           description: "Memory usage is {{ $value | humanizePercentage }}"
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#65-out-of-memory"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#65-out-of-memory"
 
       # Disk Space Low
       - alert: DiskSpaceLow
@@ -381,7 +381,7 @@ groups:
         annotations:
           summary: "🚨 Potential brute force attack detected"
           description: "{{ $value }} failed login attempts in the last 5 minutes. Immediate investigation required."
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#security-brute-force"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#security-brute-force"
 
       # Credential Stuffing / Account Takeover
       - alert: CredentialStuffingAttack
@@ -394,7 +394,7 @@ groups:
         annotations:
           summary: "🔥 Credential stuffing attack in progress"
           description: "{{ $value }} failed logins in 15 minutes. This pattern indicates automated credential testing."
-          runbook_url: "https://github.com/KrystalineX/docs/RUNBOOK.md#security-credential-stuffing"
+          runbook_url: "https://github.com/MoebiusX/Krystaline/blob/develop/docs/operations/04_RUNBOOK.md#security-credential-stuffing"
 
       # 2FA Bypass Attempts
       - alert: TwoFactorAuthBypass

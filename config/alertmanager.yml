@@ -1,4 +1,4 @@
-# Alertmanager Configuration for KrystalineX
+# Alertmanager Configuration for Krystaline
 # Routes alerts to GoAlert webhook + auto-remediation
 
 global:
@@ -99,7 +99,7 @@ receivers:
       - to: 'carlos@krystaline.io'
         send_resolved: true
         headers:
-          Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - KrystalineX'
+          Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - Krystaline'
 
   # Security alerts - GoAlert Generic API
   - name: 'goalert-security'

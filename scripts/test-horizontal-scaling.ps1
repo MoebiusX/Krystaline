@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Test horizontal scaling of KrystalineX services
+    Test horizontal scaling of Krystaline services
 
 .DESCRIPTION
     This script scales the server and payment-processor deployments to multiple
@@ -33,7 +33,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host " KrystalineX Horizontal Scaling Test" -ForegroundColor Cyan
+Write-Host " Krystaline Horizontal Scaling Test" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 

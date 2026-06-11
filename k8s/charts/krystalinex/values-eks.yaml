@@ -1,4 +1,4 @@
-# KrystalineX EKS Override Values
+# Krystaline EKS Override Values
 # Usage: helm template kx krystalinex -f krystalinex/values.yaml -f krystalinex/values-eks.yaml -f krystalinex/values-secrets.yaml
 
 global:

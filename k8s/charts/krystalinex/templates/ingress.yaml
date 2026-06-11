@@ -164,7 +164,7 @@ metadata:
     {{- end }}
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: {{ include "krystalinex.fullname" . }}-basic-auth
-    nginx.ingress.kubernetes.io/auth-realm: "KrystalineX Admin - Authentication Required"
+    nginx.ingress.kubernetes.io/auth-realm: "Krystaline Admin - Authentication Required"
 spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}

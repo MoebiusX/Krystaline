@@ -1,4 +1,4 @@
-# KrystalineX Helm Chart - Pre-Production Values
+# Krystaline Helm Chart - Pre-Production Values
 # Use this file for on-prem K8s cluster (kube, worker1, worker2)
 
 global:

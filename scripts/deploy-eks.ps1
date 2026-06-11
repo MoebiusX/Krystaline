@@ -1,4 +1,4 @@
-# KrystalineX EKS Deployment Script
+# Krystaline EKS Deployment Script
 # Usage: .\scripts\deploy-eks.ps1 [-Create] [-Deploy] [-Destroy] [-Status]
 param(
     [switch]$Create,    # Create EKS cluster
@@ -112,7 +112,7 @@ if ($Nginx) {
 }
 
 # ---------------------------------------------------------------------------
-# DEPLOY: Deploy KrystalineX via Helm
+# DEPLOY: Deploy Krystaline via Helm
 # ---------------------------------------------------------------------------
 if ($Deploy) {
     $SecretsFile = Join-Path $ChartDir "values-secrets.yaml"
@@ -149,7 +149,7 @@ goalert:
         Write-Ok "Secrets generated at $SecretsFile"
     }
 
-    Write-Step "Deploying KrystalineX to EKS namespace '$Namespace'..."
+    Write-Step "Deploying Krystaline to EKS namespace '$Namespace'..."
 
     # Template and apply (same pattern as local K8s deployment)
     Push-Location (Join-Path $RepoRoot "k8s\charts")
@@ -242,14 +242,14 @@ if ($Destroy) {
 if (-not ($Create -or $Deploy -or $Destroy -or $Status -or $Nginx -or $Secrets)) {
     Write-Host @"
 
-KrystalineX EKS Deployment
+Krystaline EKS Deployment
 ===========================
 Usage: .\scripts\deploy-eks.ps1 <action>
 
 Actions:
   -Create     Create EKS cluster (15-20 min)
   -Nginx      Install nginx-ingress controller with AWS NLB
-  -Deploy     Deploy KrystalineX Helm chart
+  -Deploy     Deploy Krystaline Helm chart
   -Status     Show cluster and pod status
   -Destroy    Tear down cluster and all resources
 

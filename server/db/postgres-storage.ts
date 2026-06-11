@@ -1,7 +1,7 @@
 /**
  * PostgreSQL Storage Implementation
  * 
- * Persistent storage using PostgreSQL for Krystaline Exchange.
+ * Persistent storage using PostgreSQL for Krystaline Observability Lab.
  * Implements IStorage interface with connection pooling and proper error handling.
  */
 

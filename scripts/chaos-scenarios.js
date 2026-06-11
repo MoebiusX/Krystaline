@@ -1,5 +1,5 @@
 /**
- * KrystalineX Chaos Scenarios — On-Demand Anomaly Generator
+ * Krystaline Chaos Scenarios — On-Demand Anomaly Generator
  *
  * Triggers realistic failure conditions that fire alerts, anomaly detection,
  * and LLM-powered root-cause analysis. Designed for demos.
@@ -277,7 +277,7 @@ async function main() {
     // Validate scenario
     if (!SCENARIO) {
         console.log(`
-🔥 KrystalineX Chaos Scenarios
+🔥 Krystaline Chaos Scenarios
 
   Server-side (injected via middleware):
     latency-spike         3-8s delays → HighLatencyP99 + anomaly detection

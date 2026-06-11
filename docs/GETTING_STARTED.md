@@ -1,4 +1,4 @@
-# Getting Started with KrystalineX
+# Getting Started with Krystaline
 
 ## Prerequisites
 
@@ -9,8 +9,8 @@
 ## 5‑Minute Quick Start
 
 ```bash
-git clone https://github.com/MoebiusX/KrystalineX.git
-cd KrystalineX
+git clone https://github.com/MoebiusX/Krystaline.git
+cd Krystaline
 npm install --legacy-peer-deps
 npm run dev
 ```

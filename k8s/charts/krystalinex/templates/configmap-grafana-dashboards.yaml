@@ -12,7 +12,7 @@ data:
     providers:
       - name: 'krystalinex'
         orgId: 1
-        folder: 'KrystalineX'
+        folder: 'Krystaline'
         type: file
         disableDeletion: false
         editable: true

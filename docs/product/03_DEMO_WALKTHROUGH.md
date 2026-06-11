@@ -1,4 +1,4 @@
-# KrystalineX Investor Demo Walkthrough
+# Krystaline Investor Demo Walkthrough
 
 > **Purpose:** Step-by-step guide to demonstrate "Proof of Observability™"  
 > **Duration:** 12-15 minutes  

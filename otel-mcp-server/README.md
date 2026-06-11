@@ -513,9 +513,9 @@ npx vitest run tests/auth.test.ts
 
 ## Appendix: Live Cluster Analysis
 
-The following analysis was generated entirely by an AI agent (GitHub Copilot CLI) using this MCP server to query a production KrystalineX cluster — 27 tool calls across 6 skills, zero manual commands. This is what "Proof of Observability" looks like in practice.
+The following analysis was generated entirely by an AI agent (GitHub Copilot CLI) using this MCP server to query a production Krystaline cluster — 27 tool calls across 6 skills, zero manual commands. This is what "Proof of Observability" looks like in practice.
 
-> **Cluster**: KrystalineX crypto exchange · 3-node K8s (1 control-plane, 2 workers) · Helm-managed  
+> **Cluster**: Krystaline crypto exchange · 3-node K8s (1 control-plane, 2 workers) · Helm-managed
 > **MCP Server**: v1.2.1 · 6/7 skills active (Elasticsearch disabled) · session-based HTTP transport  
 > **Date**: 2026-03-24T19:30 UTC
 
@@ -621,14 +621,14 @@ This directory is maintained as a **git subtree** of the standalone repo [`Moebi
 ### Pull latest changes from upstream
 
 ```bash
-cd /path/to/KrystalineX
+cd /path/to/Krystaline
 git subtree pull --prefix=otel-mcp-server otel-upstream master --squash
 ```
 
 ### Push monorepo changes back upstream
 
 ```bash
-cd /path/to/KrystalineX
+cd /path/to/Krystaline
 git subtree push --prefix=otel-mcp-server otel-upstream master
 ```
 

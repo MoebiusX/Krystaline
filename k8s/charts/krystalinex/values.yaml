@@ -1,4 +1,4 @@
-# KrystalineX Helm Chart Values
+# Krystaline Helm Chart Values
 # Default values for local development (docker-desktop)
 
 global:

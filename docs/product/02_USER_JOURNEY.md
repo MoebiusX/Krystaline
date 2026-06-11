@@ -1,4 +1,4 @@
-# KrystalineX - User Journey Design
+# Krystaline - User Journey Design
 
 **Last Updated:** 2026-02-03  
 **Status:** Implemented
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This document defines the user journey for KrystalineX, highlighting our core value proposition: **Proof of Observability™**. All major flows have been implemented and are investor-demo ready.
+This document defines the user journey for Krystaline, highlighting our core value proposition: **Proof of Observability™**. All major flows have been implemented and are investor-demo ready.
 
 ---
 
@@ -127,7 +127,7 @@ Register → Verify Email → Login → Dashboard
 
 ### Authenticated Users
 ```
-[Logo] KrystalineX    Portfolio  Trade  Convert     [User ▾]
+[Logo] Krystaline    Portfolio  Trade  Convert     [User ▾]
                                                     Settings
                                                     Transparency
                                                     Monitor (power users)
@@ -136,7 +136,7 @@ Register → Verify Email → Login → Dashboard
 
 ### Unauthenticated Users
 ```
-[Logo] KrystalineX    Transparency                  [Login] [Register]
+[Logo] Krystaline    Transparency                  [Login] [Register]
 ```
 
 ---

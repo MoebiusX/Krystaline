@@ -70,12 +70,12 @@ Analyze → User Rates → Store to JSON → Export JSONL
 
 | File | Purpose |
 |------|---------|
-| [04_FINE_TUNING.md](file:///c:/Users/bizai/Documents/GitHub/KrystalineX/docs/observability/04_FINE_TUNING.md) | Step-by-step guide |
-| [generate-synthetic-training.cjs](file:///c:/Users/bizai/Documents/GitHub/KrystalineX/scripts/generate-synthetic-training.cjs) | Synthetic data generator (100+ samples) |
-| [validate-training-data.cjs](file:///c:/Users/bizai/Documents/GitHub/KrystalineX/scripts/validate-training-data.cjs) | Dataset validation script |
-| [generate-training-data.py](file:///c:/Users/bizai/Documents/GitHub/KrystalineX/scripts/generate-training-data.py) | Hand-crafted real examples (22 samples) |
-| [axolotl-config.yaml](file:///c:/Users/bizai/Documents/GitHub/KrystalineX/axolotl-config.yaml) | LoRA training config |
-| [retrain-model.sh](file:///c:/Users/bizai/Documents/GitHub/KrystalineX/scripts/retrain-model.sh) | Training pipeline script |
+| [04_FINE_TUNING.md](04_FINE_TUNING.md) | Step-by-step guide |
+| [generate-synthetic-training.cjs](../../scripts/generate-synthetic-training.cjs) | Synthetic data generator (100+ samples) |
+| [validate-training-data.cjs](../../scripts/validate-training-data.cjs) | Dataset validation script |
+| [generate-training-data.py](../../scripts/generate-training-data.py) | Hand-crafted real examples (22 samples) |
+| [axolotl-config.yaml](../../axolotl-config.yaml) | LoRA training config |
+| [retrain-model.sh](../../scripts/retrain-model.sh) | Training pipeline script |
 
 **Training Stack:**
 - **Axolotl** for LoRA fine-tuning

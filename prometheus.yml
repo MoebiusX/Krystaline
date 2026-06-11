@@ -1,4 +1,4 @@
-# Prometheus Configuration for Krystaline Exchange
+# Prometheus Configuration for Krystaline
 # Scrapes metrics from all services (aligned with K8s ConfigMap)
 
 global:
@@ -21,7 +21,7 @@ scrape_configs:
   # APPLICATION METRICS
   # ============================================
 
-  # Krystaline Exchange API (main Express server)
+  # Krystaline API (main Express server)
   - job_name: 'krystalinex-server'
     static_configs:
       - targets: ['host.docker.internal:5000']

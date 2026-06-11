@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # =============================================================================
-# KrystalineX Database Backup Script
+# Krystaline Database Backup Script
 # =============================================================================
 # Automated backup of all PostgreSQL databases
 # 
