@@ -141,6 +141,8 @@ For production K8s deployment see the [deployment guide](docs/operations/02_DEPL
 
 | Guide | Description |
 |-------|-------------|
+| **[Public Documentation Catalog](docs/PUBLIC_DOCUMENTS.md)** | Public-safe document plan for Core-era features, audiences, and redaction boundaries |
+| **[GenAI Observability Solution](docs/GENAI_OBSERVABILITY_SOLUTION.md)** | Thesis paper for observability-first crypto operations, AI SRE, and service-manager RCA |
 | **[Demo Walkthrough](docs/product/03_DEMO_WALKTHROUGH.md)** | 15‑minute guided tour of the platform |
 | **[Architecture](docs/architecture/01_ARCHITECTURE.md)** | System design, data flow, component interactions |
 | **[Observability Whitepaper](docs/OBSERVABILITY_WHITEPAPER.md)** | Philosophy, implementation, mathematical foundations |
