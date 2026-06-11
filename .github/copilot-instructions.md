@@ -1,4 +1,4 @@
-# Copilot Instructions — KrystalineX
+# Copilot Instructions — Krystaline Observability Lab
 
 ## Build, Test, and Lint
 
@@ -24,7 +24,7 @@ npm run precommit                 # tsc + secret scan + confidential doc check
 
 ## Architecture
 
-KrystalineX is a full-stack TypeScript monorepo (React + Express) for an institutional-grade crypto exchange with a "Proof of Observability" philosophy.
+Krystaline Observability Lab is a full-stack TypeScript monorepo (React + Express) for institutional-grade crypto and DeFi observability demos with a "Proof of Observability" philosophy.
 
 ### Monorepo Layout
 

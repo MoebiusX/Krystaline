@@ -1,5 +1,5 @@
 /**
- * KrystalineX OpenTelemetry MCP Server
+ * Krystaline OpenTelemetry MCP Server
  *
  * Exposes traces, metrics, logs, and ZK proofs as MCP tools
  * so any AI agent can query the platform's telemetry.
@@ -558,12 +558,12 @@ server.tool(
 
 server.resource(
   'platform://krystalinex/overview',
-  'KrystalineX platform overview — architecture, services, and telemetry capabilities',
+  'Krystaline platform overview — architecture, services, and telemetry capabilities',
   async () => ({
     contents: [{
       uri: 'platform://krystalinex/overview',
       mimeType: 'text/markdown',
-      text: `# KrystalineX Platform Overview
+      text: `# Krystaline Platform Overview
 
 ## Services
 - **kx-exchange** — Main Express API server (auth, orders, wallets, monitoring)
@@ -720,14 +720,14 @@ async function main() {
       await transport.handleRequest(req, res);
     });
     httpServer.listen(port, () => {
-      console.error(`KrystalineX OTEL MCP server listening on http://0.0.0.0:${port}`);
+      console.error(`Krystaline OTEL MCP server listening on http://0.0.0.0:${port}`);
       console.error(`Health: http://localhost:${port}/health`);
     });
   } else {
     // Default: stdio transport
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('KrystalineX OTEL MCP server running on stdio');
+    console.error('Krystaline OTEL MCP server running on stdio');
   }
 }
 

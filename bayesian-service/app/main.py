@@ -1,5 +1,5 @@
 """
-KrystalineX Bayesian Inference Service — FastAPI Application
+Krystaline Bayesian Inference Service — FastAPI Application
 
 Endpoints:
   POST /train  — Fit hierarchical model to historical features
@@ -77,7 +77,7 @@ async def lifespan(application: FastAPI):
 
 
 app = FastAPI(
-    title="KrystalineX Bayesian Inference Service",
+    title="Krystaline Bayesian Inference Service",
     version="1.2.0",
     description="Hierarchical Bayesian modeling for distributed system observability",
     lifespan=lifespan,

@@ -1,6 +1,6 @@
 /**
  * Type declarations for circomlibjs
- * Minimal types for the Poseidon hasher used in KrystalineX
+ * Minimal types for the Poseidon hasher used in Krystaline
  */
 declare module 'circomlibjs' {
     interface PoseidonHasher {

@@ -4,10 +4,10 @@
   "description": "OpenTelemetry MCP Server — expose traces, metrics, logs, Elasticsearch, Alertmanager, and ZK proofs to AI agents via the Model Context Protocol",
   "type": "module",
   "license": "Apache-2.0",
-  "author": "KrystalineX",
+  "author": "Krystaline",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KrystalineX/otel-mcp-server"
+    "url": "https://github.com/MoebiusX/otel-mcp-server"
   },
   "keywords": [
     "opentelemetry",

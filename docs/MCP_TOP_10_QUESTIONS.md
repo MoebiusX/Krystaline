@@ -1,6 +1,6 @@
 # OTEL MCP Server — Top 20 Questions It Answers
 
-The OTEL MCP Server bridges AI agents to KrystalineX's observability stack (Jaeger, Prometheus, Loki) and application APIs (ZK proofs, anomaly detection). It exposes **23 tools** that enable both end‑users and platform engineers to interrogate the system through natural language.
+The OTEL MCP Server bridges AI agents to Krystaline's observability stack (Jaeger, Prometheus, Loki) and application APIs (ZK proofs, anomaly detection). It exposes **23 tools** that enable both end‑users and platform engineers to interrogate the system through natural language.
 
 > **Live:** `https://www.krystaline.io` · **MCP endpoint:** `kx-krystalinex-otel-mcp-server:3001`  
 > **Tools:** `traces` (5) · `metrics` (6) · `logs` (4) · `zk-proofs` (4) · `system` (4)

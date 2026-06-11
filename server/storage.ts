@@ -8,7 +8,7 @@ import { createLogger } from './lib/logger';
 // ============================================
 
 /**
- * Generates a Krystaline Exchange wallet address
+ * Generates a Krystaline wallet address
  * Format: kx1 + 32 chars base32 = "kx1qxy2kgdygjrsqtzq2n0yrf249abc"
  */
 export function generateWalletAddress(seed?: string): string {

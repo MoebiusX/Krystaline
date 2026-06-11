@@ -1,4 +1,4 @@
-# KrystalineX - Product Roadmap
+# Krystaline - Product Roadmap
 
 **Updated:** 2026-02-03  
 **Current Health Score:** 92/100  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-KrystalineX is a cryptocurrency trading platform differentiated by **Proof of Observability™** — full transaction transparency via OpenTelemetry distributed tracing. The platform has reached **investor demo readiness** with comprehensive security, 940+ passing tests, and advanced observability including LLM-powered anomaly analysis.
+Krystaline is a cryptocurrency trading platform differentiated by **Proof of Observability™** — full transaction transparency via OpenTelemetry distributed tracing. The platform has reached **investor demo readiness** with comprehensive security, 940+ passing tests, and advanced observability including LLM-powered anomaly analysis.
 
 ### Unique Value Proposition
 

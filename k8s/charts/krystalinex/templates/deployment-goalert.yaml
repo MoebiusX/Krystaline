@@ -208,7 +208,7 @@ data:
     The bootstrap-admin init container automatically creates the admin user
     and enables basic auth on every GoAlert pod startup.
     
-    For full provisioning (carlos user, KrystalineX service, integration keys),
+    For full provisioning (carlos user, legacy GoAlert service, integration keys),
     run the provision script from a machine with kubectl access:
     
       # Port-forward GoAlert

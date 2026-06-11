@@ -28,7 +28,7 @@ data:
       # APPLICATION METRICS
       # ============================================
 
-      # Krystaline Exchange API (main Express server)
+      # Krystaline API (main Express server)
       - job_name: 'krystalinex-server'
         static_configs:
           - targets: ['{{ include "krystalinex.fullname" . }}-server:5000']
@@ -189,7 +189,7 @@ data:
       {{- end }}
 
   alerting-rules.yml: |
-    # KrystalineX Prometheus Alerting Rules
+    # Krystaline Prometheus Alerting Rules
     groups:
       # ============================================
       # APPLICATION ALERTS

@@ -23,7 +23,7 @@ Quick-start guide for configuring incident management and phone notifications.
 
 ### Step 2: Create a Service
 1. Go to **Services** → **Create New Service**
-2. Name: `KrystalineX Production`
+2. Name: `Krystaline Production`
 3. Description: `Primary crypto exchange platform`
 
 ### Step 3: Create Escalation Policy

@@ -1,8 +1,8 @@
 # Public Documentation Catalog
 
 This catalog lists documentation that can be shared in the open-source
-KrystalineX project to explain what we are building in KrystalineX Core without
-revealing proprietary implementation details.
+Krystaline Observability Lab to explain what we are building in Krystaline Core
+without revealing proprietary implementation details.
 
 The rule of thumb: publish the user promise, architectural intent, public data
 model, and operational philosophy. Keep source code internals, exact control
@@ -13,6 +13,7 @@ and security-sensitive runbooks private.
 
 | Priority | Document | Audience | Public-safe angle | Keep private |
 |---|---|---|---|---|
+| P0 | Brand positioning | Contributors, observability leaders, service managers | How Krystaline, Krystaline Observability Lab, Krystaline Core, AI SRE, and Proof of Observability fit together | Naming migration details that reveal private systems, unreleased product names, customer-specific positioning |
 | P0 | Proof of Observability overview | Users, operators, investors | Why an exchange should prove trades, health, and latency with live telemetry instead of status-page claims | Internal dashboards with sensitive labels, exact alert expressions, private environment details |
 | P0 | GenAI observability solution | Observability experts, service managers, senior technical leadership | Thesis, dashboard evidence pack, status map, and AI SRE story for service-manager RCA over verified telemetry | Exact prompts, private context-builder internals, model weights, provider credentials, incident history |
 | P0 | Public MCP transparency guide | AI-agent builders, users, developers | How Claude, ChatGPT, Copilot, Cursor, or other MCP clients can query public exchange health, volume, recent trades, trace summaries, and ZK proof status | Personal-account tools, private logs, internal MCP auth, raw user data |
@@ -39,8 +40,9 @@ and security-sensitive runbooks private.
 5. Publish the operational story: **AI SRE concept note** and **adaptive anomaly detection explainer**.
 6. Publish ecosystem-facing notes: **OpenTelemetry MCP upstream contribution notes** and **one-click AI-agent connectivity roadmap**.
 
-This order gives readers a clean path: what KrystalineX is, how they can inspect
-it, why the integrity model is different, and where the platform is going.
+This order gives readers a clean path: what Krystaline Observability Lab is, how
+they can inspect it, why the integrity model is different, and where the
+platform is going.
 
 ## Public-Safe Messaging
 

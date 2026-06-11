@@ -1,6 +1,6 @@
 /**
  * Type declarations for snarkjs
- * Minimal types for the Groth16 functions used in KrystalineX
+ * Minimal types for the Groth16 functions used in Krystaline
  */
 declare module 'snarkjs' {
     export namespace groth16 {

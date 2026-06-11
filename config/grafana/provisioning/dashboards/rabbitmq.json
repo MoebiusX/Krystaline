@@ -1,6 +1,6 @@
 {
   "uid": "kx-rabbitmq",
-  "title": "KrystalineX RabbitMQ",
+  "title": "Krystaline RabbitMQ",
   "description": "RabbitMQ monitoring: queues, consumers, message rates, memory usage",
   "tags": ["krystalinex", "rabbitmq", "messaging"],
   "timezone": "browser",

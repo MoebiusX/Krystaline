@@ -1,4 +1,4 @@
-# KrystalineX — Investor Demo Script
+# Krystaline — Investor Demo Script
 
 > **Purpose:** Curated presenter script for investor meetings  
 > **Duration:** 20–25 minutes (expandable to 35 with Q&A)  
@@ -87,7 +87,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 >
 > **Third, operational risk.** When something goes wrong at 2am — a latency spike, a database timeout, a message queue backup — most exchanges discover it from customer complaints on Twitter. By then, the damage is done."
 >
-> "We built KrystalineX to solve all three of these problems at once. Let me show you."
+> "We built Krystaline to solve all three of these problems at once. Let me show you."
 
 ---
 
@@ -104,7 +104,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 ### What to Say
 
-> "This is KrystalineX. The first thing you'll notice is this headline: **Proof of Observability**. That's not marketing — it's our core technical architecture."
+> "This is Krystaline. The first thing you'll notice is this headline: **Proof of Observability**. That's not marketing — it's our core technical architecture."
 >
 > "See these numbers? P50: 12ms, P95: 45ms, P99: 243ms. Those aren't benchmarks from a slide deck. They're calculated in real-time from production OpenTelemetry instrumentation — the same standard used by Google, AWS, and every major cloud provider."
 >
@@ -326,7 +326,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 ### What to Say
 
-> "Now here's our final layer of trust — and this is what makes KrystalineX truly unique."
+> "Now here's our final layer of trust — and this is what makes Krystaline truly unique."
 >
 > "Every trade that goes through our system generates a **zero-knowledge proof** using the **Groth16 protocol** — the same cryptographic standard used in blockchain privacy systems like Zcash."
 >

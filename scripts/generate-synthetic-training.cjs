@@ -2,7 +2,7 @@
  * Synthetic Training Data Generator for Anomaly Analyzer
  * 
  * Generates realistic training examples based on patterns observed
- * in the 22 real examples from the KrystalineX platform.
+ * in the 22 real examples from the Krystaline platform.
  * 
  * Usage: node scripts/generate-synthetic-training.cjs [count]
  *   count: number of synthetic examples to generate (default: 200)

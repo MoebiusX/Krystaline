@@ -1,6 +1,6 @@
 apiVersion: v2
 name: krystalinex
-description: KrystalineX Institutional-Grade Crypto Exchange Platform
+description: Krystaline Observability Lab
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
@@ -10,7 +10,7 @@ keywords:
   - trading
   - observability
 maintainers:
-  - name: KrystalineX Team
+  - name: Krystaline Team
 
 # NOTE: For production, add Bitnami dependencies:
 # dependencies:

@@ -1,6 +1,6 @@
 {
   "uid": "kx-security-events",
-  "title": "KrystalineX Security Events",
+  "title": "Krystaline Security Events",
   "description": "Security event tracking: login attempts, rate limiting, threat severity, SIEM exports",
   "tags": ["krystalinex", "security", "siem"],
   "timezone": "browser",

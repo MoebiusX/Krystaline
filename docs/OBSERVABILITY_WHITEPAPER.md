@@ -1,4 +1,4 @@
-# KrystalineX Unified Observability Platform
+# Krystaline Observability Lab
 ### Technical Architecture & Capabilities Overview
 
 **Version:** 2.0  
@@ -13,9 +13,19 @@
 
 ## 1. Executive Summary
 
-KrystalineX is an institutional-grade cryptocurrency exchange observability demo built on a philosophy we call **Proof of Observability™** — the principle that every transaction, every service interaction, and every system decision must be traced, verified, and auditable in real-time.
+Krystaline Observability Lab is an institutional-grade cryptocurrency exchange
+observability demo built on a philosophy we call **Proof of Observability™** —
+the principle that every transaction, every service interaction, and every
+system decision must be traced, verified, and auditable in real time.
 
-Unlike traditional exchanges that treat monitoring as an afterthought, KrystalineX embeds observability into its core DNA. Every trade generates a distributed trace spanning 8–15+ microservice operations and a **Groth16 zk-SNARK proof** anchoring execution to its timestamp and OTel trace. Every latency measurement feeds into statistical baselines that power autonomous anomaly detection. Every security event is persisted, correlated, and surfaced through unified dashboards — all without requiring operators to switch between disconnected tools.
+Unlike traditional exchanges that treat monitoring as an afterthought, the lab
+embeds observability into the architecture from the start. Every trade generates
+a distributed trace spanning 8–15+ microservice operations and a **Groth16
+zk-SNARK proof** anchoring execution to its timestamp and OTel trace. Every
+latency measurement feeds into statistical baselines that power autonomous
+anomaly detection. Every security event is persisted, correlated, and surfaced
+through unified dashboards — all without requiring operators to switch between
+disconnected tools.
 
 The result is an exchange platform that doesn't just *claim* uptime — it **proves** it. Continuously. Cryptographically. In real-time.
 This architecture serves as a **scalable template for Unified, Consolidated Observability** — demonstrating how the same patterns can track and trace all operations across an entire organization, from trading to compliance to infrastructure.
@@ -33,7 +43,8 @@ This architecture serves as a **scalable template for Unified, Consolidated Obse
 
 ## 2. Platform Introduction
 
-KrystalineX operates as a full-stack BTC/USD exchange platform with the following core services:
+Krystaline Observability Lab operates as a full-stack BTC/USD exchange demo with
+the following core services:
 
 | Service | Responsibility | Technology |
 |---------|---------------|------------|
@@ -45,7 +56,7 @@ KrystalineX operates as a full-stack BTC/USD exchange platform with the followin
 
 The platform processes trades against a **live Binance WebSocket price feed**, ensuring non-simulated, deterministic pricing. Users interact through an institutional-grade React frontend that surfaces real-time system health, trace-verified activity feeds, and per-operation performance data — directly in the trading interface.
 
-![KrystalineX Landing Dashboard — "Don't Trust. Verify." with live system status showing 3,879 trades and all services operational](./images/screenshot_landing_dashboard.png)
+![Krystaline Landing Dashboard — "Don't Trust. Verify." with live system status showing 3,879 trades and all services operational](./images/screenshot_landing_dashboard.png)
 
 ---
 
@@ -53,7 +64,7 @@ The platform processes trades against a **live Binance WebSocket price feed**, e
 
 ### 3.1 Four Pillars of Observability
 
-KrystalineX implements a **four-pillar observability model** that unifies all telemetry signals into a single analysis plane:
+Krystaline implements a **four-pillar observability model** that unifies all telemetry signals into a single analysis plane:
 
 ```mermaid
 graph TB
@@ -132,7 +143,7 @@ flowchart LR
 
 ## 4. Statistical Anomaly Detection Engine
 
-The core of KrystalineX's intelligence layer is a **dual-mode statistical anomaly detection engine** that operates in real-time on both latency and transaction amount signals.
+The core of Krystaline's intelligence layer is a **dual-mode statistical anomaly detection engine** that operates in real-time on both latency and transaction amount signals.
 
 ### 4.1 Latency Anomaly Detection
 
@@ -288,7 +299,7 @@ These insights are attached to the anomaly record and served to both the LLM ana
 
 ### 6.1 Architecture
 
-KrystalineX integrates a locally-hosted **Ollama** instance running **Llama 3.2 (1B parameter)** for automated root-cause analysis. The model runs entirely on-premises — no telemetry data leaves the infrastructure boundary.
+Krystaline integrates a locally-hosted **Ollama** instance running **Llama 3.2 (1B parameter)** for automated root-cause analysis. The model runs entirely on-premises — no telemetry data leaves the infrastructure boundary.
 
 ```mermaid
 sequenceDiagram
@@ -395,7 +406,7 @@ This closed-loop architecture means the AI improves from real production inciden
 
 ### 7.1 Security Event Architecture
 
-KrystalineX implements a dedicated **Security Event Service** that captures, persists, and exposes security-relevant events across the platform:
+Krystaline implements a dedicated **Security Event Service** that captures, persists, and exposes security-relevant events across the platform:
 
 ```mermaid
 flowchart TB
@@ -466,7 +477,7 @@ All four observability pillars converge in a single **Grafana dashboard** that p
 | **Database Health** | PostgreSQL Exporter | Connection pool, query duration, table size |
 | **Message Queue** | RabbitMQ (Prometheus) | Queue depth, consumer lag, publish rate |
 
-![KrystalineX Unified Observability dashboard — Application Metrics section showing HTTP Request Rate, Response Latency (P50/P95), Error Rate, and Server Memory utilization](./images/screenshot_grafana_1_metrics.png)
+![Krystaline Unified Observability dashboard — Application Metrics section showing HTTP Request Rate, Response Latency (P50/P95), Error Rate, and Server Memory utilization](./images/screenshot_grafana_1_metrics.png)
 
 ![Order Matcher section showing 475 orders processed, order processing rate, P50/P95 matcher latency, 0.242% average slippage, and System Health panels (CPU 34.6%, Memory 59.7%, Disk 60.0%, 7 Services Up)](./images/screenshot_grafana_2_orders.png)
 
@@ -480,7 +491,7 @@ The Jaeger UI provides deep-dive trace analysis with service-level span breakdow
 
 ### 8.2 Public Transparency Dashboard
 
-Beyond internal monitoring, KrystalineX exposes a **customer-facing transparency page** that displays real-time system health metrics directly within the trading application:
+Beyond internal monitoring, Krystaline exposes a **customer-facing transparency page** that displays real-time system health metrics directly within the trading application:
 
 ![System Transparency page — 4 active services monitored, 99.9% uptime, 397ms average response, 32 operations tracked, with per-service health cards showing individual response times](./images/screenshot_transparency.png)
 
@@ -524,7 +535,7 @@ flowchart LR
 
 ### 9.1 SLO Framework
 
-KrystalineX defines and monitors two primary SLOs:
+Krystaline defines and monitors two primary SLOs:
 
 | SLO | Target | Alert Threshold | Measurement |
 |-----|--------|-----------------|-------------|
@@ -547,7 +558,7 @@ The platform achieves near-zero MTTD through multiple detection layers:
 
 The AI-powered analysis pipeline dramatically reduces MTTR by automating the most time-consuming phase of incident response — **diagnosis**:
 
-| MTTR Phase | Traditional | KrystalineX | Improvement |
+| MTTR Phase | Traditional | Krystaline | Improvement |
 |------------|-----------|-------------|-------------|
 | **Detection** | 5–15 min (manual) | <60s (automated) | ~10× faster |
 | **Triage** | 10–30 min (severity assessment) | Instant (5-tier auto-classification) | Eliminated |
@@ -577,7 +588,7 @@ The Activity feed implements a **Verified-Only** display policy: trades are only
 
 ## 11. Cryptographic Trade Verification (zk-SNARKs)
 
-KrystalineX goes beyond observability into **cryptographic verification** — generating zero-knowledge proofs that mathematically guarantee trade integrity without revealing private inputs.
+Krystaline goes beyond observability into **cryptographic verification** — generating zero-knowledge proofs that mathematically guarantee trade integrity without revealing private inputs.
 
 ### 11.1 Architecture
 
@@ -721,4 +732,4 @@ The platform includes a complete **Helm chart** and Kubernetes manifests for pro
 
 ---
 
-*KrystalineX Observability Demo Platform — Technical Architecture Whitepaper v2.0. Apache-2.0 Licensed.*
+*Krystaline Observability Demo Platform — Technical Architecture Whitepaper v2.0. Apache-2.0 Licensed.*

@@ -2,7 +2,7 @@
 
 > On-demand failure injection for demos, testing, and observability validation.
 
-The chaos injection system creates realistic failure conditions that trigger the full KrystalineX observability pipeline: Prometheus alerts, anomaly detection (Welford's algorithm), severity classification (SEV 1–5), LLM-powered root-cause analysis (Ollama), and WebSocket-streamed dashboards.
+The chaos injection system creates realistic failure conditions that trigger the full Krystaline observability pipeline: Prometheus alerts, anomaly detection (Welford's algorithm), severity classification (SEV 1–5), LLM-powered root-cause analysis (Ollama), and WebSocket-streamed dashboards.
 
 ## Architecture
 

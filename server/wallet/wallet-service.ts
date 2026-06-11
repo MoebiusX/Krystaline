@@ -2,7 +2,7 @@
  * Wallet Service
  * 
  * Manages user wallets, balances, and transactions.
- * Uses Krystaline Exchange wallet addresses (kx1...)
+ * Uses Krystaline wallet addresses (kx1...)
  */
 
 import db from '../db';
@@ -74,7 +74,7 @@ async function resolveUserId(userId: string): Promise<string | null> {
 export const walletService = {
     /**
      * Create default wallets for a new user with initial funding
-     * Also creates a Krystaline Exchange wallet address (kx1...)
+     * Also creates a Krystaline wallet address (kx1...)
      */
     async createDefaultWallets(userId: string): Promise<Wallet[]> {
         const wallets: Wallet[] = [];

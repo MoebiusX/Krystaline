@@ -1,6 +1,6 @@
 /**
  * Shared telemetry attribute names for consistent span/metric labeling
- * across all KrystalineX services. Import these instead of using string literals.
+ * across all Krystaline services. Import these instead of using string literals.
  */
 export const TELEMETRY_ATTRIBUTES = {
   // Business domain attributes

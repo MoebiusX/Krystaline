@@ -1,12 +1,12 @@
 # OpenTelemetry Tracing Implementation Guide
 
-A practical guide to distributed tracing in KrystalineX with **detailed context propagation** for span hierarchy.
+A practical guide to distributed tracing in Krystaline with **detailed context propagation** for span hierarchy.
 
 > **⚠️ IMPORTANT**: Read the Service Naming Convention section when renaming services to avoid breaking trace correlation in Jaeger.
 
 ## Service Naming Convention
 
-KrystalineX uses a consistent `kx-*` naming convention for all services:
+Krystaline uses a consistent `kx-*` naming convention for all services:
 
 | Service | OTEL Service Name | Tracer Name | Description |
 |---------|-------------------|-------------|-------------|

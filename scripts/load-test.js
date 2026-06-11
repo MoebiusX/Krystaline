@@ -1,5 +1,5 @@
 /**
- * KrystalineX Load Test — Synthetic Traffic Generator
+ * Krystaline Load Test — Synthetic Traffic Generator
  *
  * Generates realistic exchange traffic at configurable intensity levels.
  * Users are seeded directly into Postgres (pre-verified) and log in via the
@@ -449,7 +449,7 @@ function randomBetween(min, max) { return Math.floor(Math.random() * (max - min)
 
 async function main() {
     console.log('\n' + '═'.repeat(60));
-    console.log(' 🔥 KrystalineX Load Test');
+    console.log(' 🔥 Krystaline Load Test');
     console.log('═'.repeat(60));
     console.log(`  Profile:    ${profileName}`);
     console.log(`  VUs:        ${VUS}`);

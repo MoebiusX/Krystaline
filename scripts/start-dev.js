@@ -19,7 +19,7 @@ if (!validateConfig()) {
     process.exit(1);
 }
 
-console.log('🚀 Starting Krystaline Exchange Development Environment...');
+console.log('🚀 Starting Krystaline Development Environment...');
 
 async function checkDocker() {
     try {

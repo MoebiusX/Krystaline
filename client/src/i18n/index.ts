@@ -1,5 +1,5 @@
 /**
- * i18n Configuration for KrystalineX
+ * i18n Configuration for Krystaline
  * 
  * Supports EU multi-locale with:
  * - English (default)

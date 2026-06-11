@@ -1,7 +1,7 @@
-# KrystalineX Local Port-Forward Script
+# Krystaline Local Port-Forward Script
 # Starts all port-forwards for local development with docker-desktop
 
-Write-Host "🚀 Starting KrystalineX Port-Forwards..." -ForegroundColor Cyan
+Write-Host "🚀 Starting Krystaline Port-Forwards..." -ForegroundColor Cyan
 Write-Host ""
 
 $namespace = "krystalinex"
@@ -30,7 +30,7 @@ foreach ($pf in $portForwards) {
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Yellow
-Write-Host "  KrystalineX Services Available:" -ForegroundColor Yellow
+Write-Host "  Krystaline Services Available:" -ForegroundColor Yellow
 Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Yellow
 Write-Host "  Frontend:       http://localhost:5174" -ForegroundColor White
 Write-Host "  Server API:     http://localhost:5000/api/v1" -ForegroundColor White

@@ -11,18 +11,23 @@ of the trust story.
 
 | Tag | Meaning |
 |---|---|
-| `[PUBLIC]` | Present in the open KrystalineX repository or public documentation. |
-| `[CORE]` | Implemented in KrystalineX Core or visible in internal/live operational assets, but not fully published in this repository. |
+| `[PUBLIC]` | Present in the open Krystaline Observability Lab repository or public documentation. |
+| `[CORE]` | Implemented in Krystaline Core or visible in internal/live operational assets, but not fully published in this repository. |
 | `[BACKLOG]` | Planned or designed, but not yet a shipped public capability. |
 | `[ASPIRATIONAL]` | Strategic direction. Do not market as shipped. |
 | `[NON-GOAL]` | Deliberately not the product direction. |
 
 ## Executive Summary
 
-KrystalineX is an observability-first crypto and DeFi operating platform. Its
-core thesis is that financial infrastructure should not ask users, operators,
-service managers, or auditors to trust an opaque system. Every important action
-should be traceable, measurable, explainable, and eventually verifiable.
+Krystaline Observability Lab is the public expression of the Krystaline thesis:
+crypto and DeFi infrastructure should be observable before it asks anyone to
+trust it. Every important action should be traceable, measurable, explainable,
+and eventually verifiable.
+
+Krystaline Core is where the private research and product acceleration happens.
+The lab shows the promise, the operating model, the evidence surfaces, and the
+OpenTelemetry-first architecture without revealing private implementation
+details.
 
 The GenAI solution is the operational layer that makes that telemetry usable at
 incident speed. It does not ask a language model to "guess what is wrong" from a
@@ -82,7 +87,7 @@ operational understanding.
 | Trace-centric RCA context gathering | `[CORE]` | Core includes context enrichment from trace, metrics, logs, topology, alerts, and SLO state. |
 | Dedicated GenAI dashboard pack | `[CORE]` | Core contains `genai-operations.json`, `ai-rca-reliability.json`, and `mcp-observability-trace-coverage.json`; these match the mission-control dashboards in the screenshot. |
 | GenAI operational alert rules | `[CORE]` | Core validates GenAI latency, error-ratio, RCA failure, queue backlog, dropped-event, and token-burn rules. |
-| Deploy-time provider selection | `[CORE]` | Core supports local Ollama default and external OpenAI-compatible/Hugging Face-style provider configuration. |
+| Deploy-time provider selection | `[CORE]` | Core keeps local Ollama as the default/evidenced RCA path and supports optional deploy-time OpenAI-compatible or Hugging Face endpoint configuration. |
 | Public-facing thesis document | `[PUBLIC]` | This file is the public-safe narrative. |
 | War-room assistant card and follow-up thread | `[BACKLOG]` | Designed in US-002; needs chat adapter, identity mapping, and production workflow. |
 | "Show my work" evidence trail in the card | `[BACKLOG]` | Designed; requires durable tool-call audit presentation. |
@@ -98,7 +103,7 @@ not just latency. A stale price feed is not just an integration issue. A missing
 trace is not just a telemetry gap. Each can become a question about fairness,
 solvency, market integrity, customer funds, or regulatory evidence.
 
-KrystalineX treats observability as a product capability, not an internal
+Krystaline treats observability as a product capability, not an internal
 operations afterthought:
 
 - Every trade should have a traceable lifecycle.
@@ -119,9 +124,9 @@ Service managers are being asked to own reliability, cost, risk, and customer
 experience for services they do not personally operate minute by minute. They do
 not want another dashboard wall. They want an answer they can act on.
 
-The KrystalineX GenAI layer is designed for that demand:
+The Krystaline GenAI layer is designed for that demand:
 
-| Service manager demand | KrystalineX answer |
+| Service manager demand | Krystaline answer |
 |---|---|
 | "Is my service healthy right now?" | Combines SLO state, active alerts, anomaly baselines, and dependency health. |
 | "Is this actually my service or a downstream dependency?" | Uses traces and topology to separate local failure from dependency impact. |
@@ -169,7 +174,7 @@ trust signals.
 | Auditability | Preserve trace IDs, alert history, model metadata, and evidence trails for incident review. |
 | Customer trust | Turn platform health and proof status into public transparency instead of private claims. |
 
-This is what makes KrystalineX more than an observability demo. It shows how a
+This is what makes Krystaline more than an observability demo. It shows how a
 financial platform can make reliability, proof, and operational explanation part
 of the product itself.
 
@@ -214,12 +219,35 @@ expensive, noisy, degraded, or blind.
 | RCA context | `[CORE]` Trace-centric enrichment can gather traces, metrics, logs, topology, alerts, and SLO context for analysis. | Improve public explanation of how context is assembled without publishing prompts or internals. | Fully autonomous root-cause certainty. The output remains a hypothesis with evidence. |
 | AI SRE workflow | `[PUBLIC]` Thesis and US-002 narrative. `[CORE]` RCA metrics and dashboards support the workflow. | Chat/war-room card, follow-up thread, "show my work", card delivery SLO, and GoAlert ack identity mapping. | Replacing the on-call engineer or making AI the incident commander. |
 | MCP investigation | `[PUBLIC]` MCP concepts and public transparency docs. `[CORE]` MCP signal dashboard and backend/tool metrics. | Close any live trace-coverage gaps and expose the operator-safe story publicly. | Giving public MCP access to private logs, user data, or mutating tools. |
-| Provider strategy | `[CORE]` Local model default plus deploy-time external provider path. | Mature provider governance, external smoke tests, cost controls, and enterprise key-management story. | Customer self-service BYOK before tenant-scoped KMS/secrets design is approved. |
+| Provider strategy | `[CORE]` Local Ollama default plus deploy-time external provider plumbing. Hugging Face Inference Endpoints are supported as an optional configuration path, not the current production claim. | Mature provider governance, external smoke tests, cost controls, and enterprise key-management story. | Customer self-service BYOK before tenant-scoped KMS/secrets design is approved. |
 | Remediation | `[PUBLIC]` Deterministic alerting and self-healing narrative. | Human-approved actions behind a separate action surface. | Unapproved AI rollback, restart, or scale actions. |
+
+## Provider Reality Check
+
+We should be precise about model externalization:
+
+| Question | Answer |
+|---|---|
+| Is RCA currently presented as externalized to Hugging Face Inference Endpoints? | No. The documented, evidenced default remains local Ollama-backed RCA. |
+| Does Core support a Hugging Face endpoint path? | Yes. Core has deploy-time provider plumbing for `GENAI_PROVIDER=huggingface` with `GENAI_BASE_URL` pointing at a compatible endpoint. |
+| Is that the same as customer BYOK? | No. Customer self-service BYOK needs tenant-scoped key storage, audit events, spend limits, and security review. |
+| What should we say publicly? | "Local-first by default; external provider routing is supported as a controlled deployment option; production rollout and governance remain backlog." |
+
+For large-scale deployments that are not processing financial data or similarly
+sensitive operational context, external inference endpoints are a natural
+scaling path: they simplify capacity management, model selection, and regional
+rollout. Krystaline keeps the financial-data posture more conservative:
+local-first by default, external-provider capable by design, and governed before
+use in sensitive environments.
+
+This matters because the product thesis is stronger when the model path is
+honest: Krystaline can observe and govern whichever GenAI provider is active,
+but it should not imply a provider is live unless the target deployment is
+actually using it.
 
 ## Design Principle
 
-The KrystalineX GenAI layer is built around a simple principle:
+The Krystaline GenAI layer is built around a simple principle:
 
 > GenAI should explain verified telemetry, not invent operational reality.
 
@@ -249,13 +277,13 @@ human workflow is still often manual:
    business-impacting.
 8. Write a summary for the incident channel or leadership.
 
-That handoff from raw signal to useful explanation is the gap KrystalineX
+That handoff from raw signal to useful explanation is the gap Krystaline
 targets. The GenAI layer turns an observability stack into an investigative
 assistant while preserving the underlying engineering controls.
 
 ## Solution Overview
 
-KrystalineX combines four layers:
+Krystaline combines four layers:
 
 | Layer | Purpose | Primary users |
 |---|---|---|
@@ -320,7 +348,7 @@ flowchart TB
 | Level 4: Operated | `[BACKLOG]` | US-002 turns the hypothesis into a war-room workflow for service managers and on-call engineers. |
 | Level 5: Governed action | `[ASPIRATIONAL]` | Approved, audited, human-gated actions can be proposed or executed. |
 
-The project is strongest when we are precise: KrystalineX is already beyond
+The project is strongest when we are precise: Krystaline is already beyond
 "instrumented" and into "explained" for the Core operational slice. The full
 service-manager cockpit is the next product step.
 
@@ -417,7 +445,7 @@ business impact.
 
 ### 1. It is grounded in traces, not just logs
 
-Most AI operations demos start with log summarization. KrystalineX starts with
+Most AI operations demos start with log summarization. Krystaline starts with
 distributed traces because traces preserve causality across services. A single
 trade can be followed through browser, gateway, API, queue, matcher, settlement,
 and verification. The GenAI layer can therefore reason about service order,
@@ -427,7 +455,7 @@ disconnected text.
 ### 2. It combines statistical and generative intelligence
 
 Statistical systems are better at saying "this is abnormal." Language models
-are better at explaining "what this probably means" to a human. KrystalineX
+are better at explaining "what this probably means" to a human. Krystaline
 keeps those responsibilities separate:
 
 - Time-aware baselines detect abnormal behavior.
@@ -470,7 +498,7 @@ Mutating actions belong behind a separate approval model.
 
 ### 5. It separates explanation from authority
 
-KrystalineX does not make the model the pager, the incident commander, or the
+Krystaline does not make the model the pager, the incident commander, or the
 control plane. The GenAI layer can recommend and summarize, but paging,
 acknowledgement, escalation, and remediation policies remain explicit and
 auditable.
@@ -528,7 +556,7 @@ what to verify next.
 
 ## Operating Model
 
-KrystalineX uses a two-tier operating model:
+Krystaline uses a two-tier operating model:
 
 | Tier | Role | Technology posture |
 |---|---|---|
@@ -581,7 +609,7 @@ need systems that can:
 - Keep AI outputs governed, auditable, and measurable.
 - Support both deep technical diagnosis and leadership-level communication.
 
-KrystalineX is using the exchange domain as a demanding testbed because the
+Krystaline is using the exchange domain as a demanding testbed because the
 operational stakes are high: latency, correctness, trust, solvency, and
 auditability all matter at the same time.
 
@@ -633,7 +661,7 @@ For product roadmap conversations, be explicit:
 
 ## Positioning Statement
 
-KrystalineX treats GenAI observability as a governed operations capability:
+Krystaline treats GenAI observability as a governed operations capability:
 
 > OpenTelemetry provides the facts. Statistical and Bayesian models identify
 > abnormality and likelihood. GenAI turns the evidence into a usable explanation.

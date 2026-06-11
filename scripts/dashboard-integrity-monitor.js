@@ -1,5 +1,5 @@
 /**
- * KrystalineX Dashboard Integrity Monitor
+ * Krystaline Dashboard Integrity Monitor
  *
  * Continuous synthetic traffic generator + dashboard integrity scorer.
  * Runs on a configurable loop (default 60s) that:
@@ -371,7 +371,7 @@ async function runCycle(panelQueries) {
 }
 
 async function main() {
-    console.log('🛡️  KrystalineX Dashboard Integrity Monitor');
+    console.log('🛡️  Krystaline Dashboard Integrity Monitor');
     console.log(`   Target: ${config.isRemote ? '🌐 K8s' : '🏠 Local'}`);
     console.log(`   Prometheus: ${PROM_URL}`);
     console.log(`   Server: ${SERVER_URL}`);

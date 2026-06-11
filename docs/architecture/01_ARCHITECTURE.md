@@ -1,4 +1,4 @@
-# Krystaline Exchange Architecture & Repository Map
+# Krystaline Observability Lab Architecture & Repository Map
 
 ## System Overview
 

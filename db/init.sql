@@ -57,7 +57,7 @@ CREATE TABLE wallets (
     balance DECIMAL(24, 8) DEFAULT 0 CHECK (balance >= 0),
     available DECIMAL(24, 8) DEFAULT 0 CHECK (available >= 0),
     locked DECIMAL(24, 8) DEFAULT 0 CHECK (locked >= 0),
-    address VARCHAR(64),  -- Krystaline Exchange wallet address (kx1...)
+    address VARCHAR(64),  -- Krystaline wallet address (kx1...)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(user_id, asset)

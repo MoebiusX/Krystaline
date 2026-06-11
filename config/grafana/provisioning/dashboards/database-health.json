@@ -1,6 +1,6 @@
 {
   "uid": "kx-database-health",
-  "title": "KrystalineX Database Health",
+  "title": "Krystaline Database Health",
   "description": "PostgreSQL monitoring: connections, query performance, replication, storage",
   "tags": ["krystalinex", "database", "postgresql"],
   "timezone": "browser",

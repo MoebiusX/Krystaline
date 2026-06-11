@@ -1,4 +1,4 @@
-# KrystalineX Observability Gap Closure — Full Analysis
+# Krystaline Observability Gap Closure — Full Analysis
 
 **Date:** 2026-03-18
 **Scope:** All 12 capabilities scoring below 9/10

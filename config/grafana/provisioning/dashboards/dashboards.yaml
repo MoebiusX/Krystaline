@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: 'KrystalineX Dashboards'
+  - name: 'Krystaline Dashboards'
     orgId: 1
-    folder: 'KrystalineX'
+    folder: 'Krystaline'
     folderUid: 'krystalinex'
     type: file
     disableDeletion: false

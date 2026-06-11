@@ -279,7 +279,7 @@ router.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'operational',
     timestamp: new Date().toISOString(),
-    message: 'Krystaline Exchange API'
+    message: 'Krystaline Observability Lab API'
   });
 });
 

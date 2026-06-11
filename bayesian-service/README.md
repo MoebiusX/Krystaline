@@ -1,12 +1,12 @@
-# KrystalineX Bayesian Inference Service
+# Krystaline Bayesian Inference Service
 
 Hierarchical Bayesian modeling for probabilistic observability.  
-Extends KrystalineX's deterministic anomaly detection with uncertainty-aware inference, root cause analysis, and confidence scoring.
+Extends Krystaline's deterministic anomaly detection with uncertainty-aware inference, root cause analysis, and confidence scoring.
 
 ## Architecture
 
 ```
-KrystalineX (Node/TypeScript)
+Krystaline (Node/TypeScript)
   └─ server/bayesian/
        ├─ feature-extractor.ts  → OTEL traces → structured features
        ├─ client.ts             → HTTP client to Python service
@@ -150,7 +150,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8100
 |---|---|---|
 | `BAYESIAN_SERVICE_URL` | `http://localhost:8100` | URL of the Python service (TypeScript client) |
 
-## Integration with KrystalineX
+## Integration with Krystaline
 
 The TypeScript integration at `server/bayesian/` handles:
 

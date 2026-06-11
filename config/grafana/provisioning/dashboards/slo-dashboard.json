@@ -1,6 +1,6 @@
 {
   "uid": "kx-slo-dashboard",
-  "title": "KrystalineX SLO Dashboard",
+  "title": "Krystaline SLO Dashboard",
   "description": "Service Level Objectives: availability, latency, error budgets, burn rates",
   "tags": ["krystalinex", "slo", "reliability"],
   "timezone": "browser",

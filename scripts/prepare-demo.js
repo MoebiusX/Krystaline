@@ -66,7 +66,7 @@ async function checkService(name, url, expectedStatus = 200) {
 
 // Main function
 async function main() {
-    console.log('\n' + colors.bold(colors.cyan('🔧 KrystalineX Demo Preparation')) + '\n');
+    console.log('\n' + colors.bold(colors.cyan('🔧 Krystaline Demo Preparation')) + '\n');
     console.log('This script verifies system readiness for investor demos.\n');
     console.log(colors.bold('Checking Infrastructure:'));
 

@@ -1,4 +1,4 @@
-# KrystalineX Operational Runbook
+# Krystaline Operational Runbook
 
 **Version:** 1.0  
 **Last Updated:** February 1, 2026  
@@ -641,7 +641,7 @@ openssl rand -hex 8
    - **Name:** Mobile (ntfy)
    - **URL:** 
      ```
-     https://ntfy.sh/YOUR_TOPIC?tpl=yes&title=🚨+KrystalineX+Alert&message={{.Summary}}&priority=high&tags=warning
+     https://ntfy.sh/YOUR_TOPIC?tpl=yes&title=🚨+Krystaline+Alert&message={{.Summary}}&priority=high&tags=warning
      ```
 5. Click **Submit**
 

@@ -1,4 +1,4 @@
-# eksctl ClusterConfig for KrystalineX on AWS EKS
+# eksctl ClusterConfig for Krystaline on AWS EKS
 # Region: eu-west-1 (Ireland)
 # Usage: eksctl create cluster -f k8s/eks/cluster.yaml
 apiVersion: eksctl.io/v1alpha5
