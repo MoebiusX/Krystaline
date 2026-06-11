@@ -1,17 +1,3 @@
----
-title: "AI Ops in 2026: The Model Is Not the Monitor"
-subtitle: "How to monitor GenAI systems, run AI-assisted incident response, and keep human authority intact."
-description: "AI Ops in 2026 is not a chatbot beside a dashboard. It is an observable operating model for turning telemetry into evidence-backed operational understanding."
-slug: ai-ops-2026-model-not-monitor
-tags:
-  - AI Ops
-  - AIOps
-  - Observability
-  - OpenTelemetry
-  - SRE
-  - GenAI
----
-
 # AI Ops in 2026: The Model Is Not the Monitor
 
 *How to monitor GenAI systems, run AI-assisted incident response, and keep human authority intact.*
