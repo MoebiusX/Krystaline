@@ -35,7 +35,6 @@ naming policy.
 |---|---|
 | [Live Lab](https://www.krystaline.io) | Public demo environment. |
 | [GenAI Observability Solution](docs/GENAI_OBSERVABILITY_SOLUTION.md) | AI SRE thesis, service-manager use case, Core/public boundaries. |
-| [AI Ops 2026 Article Draft](docs/AIOPS_2026_ARTICLE_DRAFT.md) | Medium/LinkedIn-style narrative for how GenAI monitoring and AI-assisted operations work. |
 | [Demo Walkthrough](docs/product/03_DEMO_WALKTHROUGH.md) | Guided 15-minute product tour. |
 | [Getting Started](docs/GETTING_STARTED.md) | Local setup, repo map, and useful commands. |
 | [Architecture](docs/architecture/01_ARCHITECTURE.md) | System design, data flow, and service interactions. |
@@ -348,7 +347,6 @@ see [Getting Started](docs/GETTING_STARTED.md).
 
 | Guide | Description |
 |---|---|
-| [AI Ops 2026 Article Draft](docs/AIOPS_2026_ARTICLE_DRAFT.md) | Shareable Medium/LinkedIn-style draft explaining how GenAI monitoring and AI-assisted operations work in 2026. |
 | [GenAI Observability Solution](docs/GENAI_OBSERVABILITY_SOLUTION.md) | AI SRE thesis, service-manager control, Core/public status, governance boundaries. |
 | [Brand Positioning](docs/BRAND_POSITIONING.md) | Naming architecture for Krystaline, the lab, Core, and legacy runtime IDs. |
 | [Public Documentation Catalog](docs/PUBLIC_DOCUMENTS.md) | Public-safe document plan, audience map, and redaction boundaries. |

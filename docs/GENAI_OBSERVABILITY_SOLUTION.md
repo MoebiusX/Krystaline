@@ -4,8 +4,6 @@ Status: Draft
 Audience: Observability experts, SRE leaders, platform engineering leaders, CTO/CIO stakeholders  
 Classification: Public-safe overview
 
-Related narrative: [AI Ops in 2026: The Model Is Not the Monitor](AIOPS_2026_ARTICLE_DRAFT.md)
-
 ## Status Legend
 
 This document separates what exists from what is next. That distinction is part
