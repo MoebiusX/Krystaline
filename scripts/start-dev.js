@@ -35,12 +35,12 @@ async function startDockerServices() {
     // Only start infrastructure services (not kx-exchange or frontend - those run natively)
     const services = [
         'kong-database', 'kong-migrations', 'kong-gateway',
-        'rabbitmq', 'app-database', 'jaeger', 'otel-collector',
+        'rabbitmq', 'app-database', 'redis', 'jaeger', 'otel-collector',
         'prometheus', 'maildev', 'ollama', 'alertmanager',
         // Unified Observability stack
         'loki', 'promtail', 'grafana',
         // Metrics exporters for holistic observability
-        'postgres-exporter', 'kong-postgres-exporter', 'node-exporter',
+        'postgres-exporter', 'kong-postgres-exporter', 'node-exporter', 'redis-exporter',
         // On-call / incident management
         'goalert-db', 'goalert'
     ];
