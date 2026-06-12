@@ -32,7 +32,7 @@ logger.info({ general: RATE_LIMIT_GENERAL, auth: RATE_LIMIT_AUTH, sensitive: RAT
  * Create a Redis-backed store for rate limiting.
  * Falls back to in-memory if Redis is unavailable.
  */
-function createRateLimitStore(prefix: string): { store?: InstanceType<typeof RedisStore> } {
+function createRateLimitStore(prefix: string): { store?: InstanceType<typeof RedisStore>; passOnStoreError?: boolean } {
   const redis = getRedisClient();
   if (!redis) {
     logger.warn({ prefix }, 'Redis unavailable — rate limiter using in-memory store (not suitable for horizontal scaling)');
@@ -45,6 +45,9 @@ function createRateLimitStore(prefix: string): { store?: InstanceType<typeof Red
       sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)) as any,
       prefix: `rl:${prefix}:`,
     }),
+    // If Redis drops mid-flight (or never connects), let requests through
+    // instead of failing every API call with a 500
+    passOnStoreError: true,
   };
 }
 

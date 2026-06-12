@@ -18,19 +18,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '..');
 
 // Patterns that indicate potential hardcoded secrets
+// Quoted values starting with $ are variable references (shell/PowerShell
+// interpolation, helm/envsubst placeholders), not literal secrets.
 const SECRET_PATTERNS = [
   // API keys and tokens
-  { pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"][^'"]{10,}['"]/gi, name: 'API Key' },
-  { pattern: /(?:secret[_-]?key|secretkey)\s*[:=]\s*['"][^'"]{10,}['"]/gi, name: 'Secret Key' },
-  { pattern: /(?:access[_-]?token|accesstoken)\s*[:=]\s*['"][^'"]{10,}['"]/gi, name: 'Access Token' },
-  { pattern: /(?:auth[_-]?token|authtoken)\s*[:=]\s*['"][^'"]{10,}['"]/gi, name: 'Auth Token' },
-  
+  { pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"](?!\$)[^'"]{10,}['"]/gi, name: 'API Key', exclude: ['demo', 'test', 'example', 'placeholder'] },
+  { pattern: /(?:secret[_-]?key|secretkey)\s*[:=]\s*['"](?!\$)[^'"]{10,}['"]/gi, name: 'Secret Key' },
+  { pattern: /(?:access[_-]?token|accesstoken)\s*[:=]\s*['"](?!\$)[^'"]{10,}['"]/gi, name: 'Access Token' },
+  { pattern: /(?:auth[_-]?token|authtoken)\s*[:=]\s*['"](?!\$)[^'"]{10,}['"]/gi, name: 'Auth Token' },
+
   // Database credentials
-  { pattern: /(?:password|passwd|pwd)\s*[:=]\s*['"][^'"]{4,}['"]/gi, name: 'Password', exclude: ['test', 'example', 'placeholder', 'your-', 'process.env', 'CHANGE_ME', 'change_me', 'synthetic'] },
-  
+  { pattern: /(?:password|passwd|pwd)\s*[:=]\s*['"](?!\$)[^'"]{4,}['"]/gi, name: 'Password', exclude: ['test', 'example', 'placeholder', 'your-', 'process.env', 'CHANGE_ME', 'change_me', 'synthetic'] },
+
   // AWS
   { pattern: /AKIA[0-9A-Z]{16}/g, name: 'AWS Access Key ID' },
-  { pattern: /(?:aws[_-]?secret|aws_secret_access_key)\s*[:=]\s*['"][^'"]{20,}['"]/gi, name: 'AWS Secret' },
+  { pattern: /(?:aws[_-]?secret|aws_secret_access_key)\s*[:=]\s*['"](?!\$)[^'"]{20,}['"]/gi, name: 'AWS Secret' },
   
   // Private keys
   { pattern: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/g, name: 'Private Key' },
