@@ -9,6 +9,25 @@ model, and operational philosophy. Keep source code internals, exact control
 logic, credentials, private deployment values, provider-specific integrations,
 and security-sensitive runbooks private.
 
+## Published in This Repository
+
+The following items from the publishing set are now live in the lab:
+
+- [Secure Operational Transparency Principles](SECURE_OPERATIONAL_TRANSPARENCY.md)
+  — generic defensive principles for token integrity, authentication throttling,
+  secrets at rest, and keeping the public surface read-only and fail-closed.
+- [Deployment Provenance and Drift](DEPLOYMENT_PROVENANCE_AND_DRIFT.md) — why
+  digest pinning, provenance, dependency locking, and drift detection matter for
+  financial infrastructure.
+- [Security Hardening — Philosophy and Public Changelog](SECURITY_HARDENING_CHANGELOG.md)
+  — how we review and harden, and the public-safe categories of what changed.
+- [Hardening Samples](samples/README.md) — reference implementations that
+  accompany the docs (not wired into the build).
+
+Each was written to the redaction checklist below: generic patterns and
+defensive principles only, with no internal thresholds, topology, circuit
+parameters, secret names, or private hostnames.
+
 ## Recommended Publishing Set
 
 | Priority | Document | Audience | Public-safe angle | Keep private |
