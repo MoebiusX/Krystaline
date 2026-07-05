@@ -11,6 +11,13 @@ import { getErrorMessage } from '../lib/errors';
 
 const router = Router();
 
+// The deposit endpoint simulates a credit for demo purposes — there is no real
+// funding source behind it. Keep it usable in dev, but require an explicit
+// opt-in to enable it in production, and always cap the per-request amount.
+const SIMULATED_DEPOSITS_ENABLED =
+    process.env.NODE_ENV !== 'production' || process.env.ENABLE_SIMULATED_DEPOSITS === 'true';
+const MAX_SIMULATED_DEPOSIT = Number(process.env.SIMULATED_DEPOSIT_MAX) || 10000;
+
 /**
  * GET /api/wallet/balances
  * Get all wallet balances for current user
@@ -105,10 +112,18 @@ router.get('/transactions/history', authenticate, async (req, res) => {
  */
 router.post('/deposit', authenticate, async (req, res) => {
     try {
+        if (!SIMULATED_DEPOSITS_ENABLED) {
+            return res.status(403).json({ error: 'Simulated deposits are not enabled in this environment' });
+        }
+
         const { asset, amount } = req.body;
 
         if (!asset || !amount || amount <= 0) {
             return res.status(400).json({ error: 'Valid asset and amount required' });
+        }
+
+        if (amount > MAX_SIMULATED_DEPOSIT) {
+            return res.status(400).json({ error: `Amount exceeds the simulated deposit limit of ${MAX_SIMULATED_DEPOSIT}` });
         }
 
         const transaction = await walletService.credit(
