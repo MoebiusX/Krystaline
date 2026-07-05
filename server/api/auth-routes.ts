@@ -145,9 +145,10 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
             [userId, token, expiresAt]
         );
 
-        // In production, send email here
-        // For now, log the token (check MailDev in dev)
-        logger.info({ email, token }, 'Password reset requested');
+        // In production, send the email here (in dev, the token is delivered via
+        // MailDev). The reset token is a credential, so it must not be written to
+        // application logs.
+        logger.info({ email }, 'Password reset requested');
 
         res.json({ success: true, message: 'If an account exists, a reset email has been sent' });
     } catch (error) {
