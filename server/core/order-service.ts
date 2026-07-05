@@ -406,9 +406,13 @@ export class OrderService {
                     spanId
                 });
 
-                // Update wallets
-                await walletService.updateBalance(request.fromUserId, 'BTC', fromWallet.btc - request.amount);
-                await walletService.updateBalance(request.toUserId, 'BTC', toWallet.btc + request.amount);
+                // Move the funds through the atomic transfer primitive: a single
+                // locked transaction re-reads both wallets (SELECT ... FOR UPDATE),
+                // debits the sender and credits the receiver together. The previous
+                // two-step updateBalance() wrote absolute balances derived from a
+                // stale read, so concurrent transfers could lose an update or a
+                // mid-operation failure could leave the debit and credit out of sync.
+                await walletService.transfer(request.fromUserId, request.toUserId, 'BTC', request.amount);
 
                 // Update transfer status
                 await storage.updateTransfer(transferId, 'COMPLETED');
