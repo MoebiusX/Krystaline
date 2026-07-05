@@ -206,6 +206,14 @@ router.post('/recalculate', async (req, res) => {
  * Clear all baselines for fresh validation
  */
 router.delete('/reset', async (req, res) => {
+    // Destructive maintenance operation (TRUNCATE). Fail closed: it is only
+    // available when an operator key is configured, and the caller must present
+    // that key. With no key set, the route always refuses.
+    const maintenanceKey = process.env.MONITOR_MAINTENANCE_KEY;
+    if (!maintenanceKey || req.get('x-maintenance-key') !== maintenanceKey) {
+        return res.status(403).json({ error: 'Not authorized' });
+    }
+
     const { drizzleDb } = await import('../db/drizzle');
     const { sql } = await import('drizzle-orm');
 
