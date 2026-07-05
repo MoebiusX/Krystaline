@@ -2,10 +2,36 @@
 
 *Example responses are illustrative transcripts, not live measurements.*
 
-The OTEL MCP Server bridges AI agents to Krystaline's observability stack (Jaeger, Prometheus, Loki) and application APIs (ZK proofs, anomaly detection). It exposes **23 tools** that enable both end‑users and platform engineers to interrogate the system through natural language.
+The OTEL MCP Server bridges AI agents to Krystaline's observability stack (Jaeger, Prometheus, Alertmanager, Grafana) and application APIs (ZK proofs, anomaly detection, public exchange data). As deployed on the live lab (read from a live MCP connection, 2026-07-05), it exposes **43 read‑only tools across 8 skills** that enable end‑users, platform engineers, and auditors to interrogate the system through natural language.
 
 > **Live:** `https://www.krystaline.io` · **MCP endpoint:** `kx-krystalinex-otel-mcp-server:3001`  
-> **Tools:** `traces` (5) · `metrics` (6) · `logs` (4) · `zk-proofs` (4) · `system` (4)
+> **Deployed skills (live lab, 2026-07-05):** `traces` (5) · `metrics` (6) · `alertmanager` (4) · `grafana` (10) · `vmalert` (4) · `anomalies` (2) · `zk-proofs` (4) · `system/public-exchange` (8)
+
+*Version note: the repo‑pinned [`otel-mcp-server`](../otel-mcp-server/README.md) subtree (v1.2.0) documents 32 tools across 7 skills. The live deployment runs a newer upstream build that adds the Grafana, vmalert, and public‑exchange skills — and does not currently deploy the Loki `logs_*` skill (see Q9).*
+
+## Connect in Two Minutes
+
+Point any MCP client that supports HTTP transport at the deployed endpoint:
+
+```json
+{
+  "mcpServers": {
+    "krystaline-otel": {
+      "type": "http",
+      "url": "http://kx-krystalinex-otel-mcp-server:3001/mcp",
+      "headers": {
+        "X-API-Key": "sk-your-key"
+      }
+    }
+  }
+}
+```
+
+The address above is the in‑cluster service name — from outside the cluster, reach it through your ingress or a port‑forward. Authentication is an API key via `X-API-Key` or `Authorization: Bearer`; only `/health` is unauthenticated. Self‑hosters: run your own instance against your own Jaeger/Prometheus/Loki — the [otel-mcp-server README](../otel-mcp-server/README.md) covers stdio, HTTP, Docker, and Kubernetes setups.
+
+## Why Read‑Only?
+
+Every one of the 43 deployed tools is a query. There is no `restart_service`, no `silence_create`, no config write — write and admin tools are absent from the deployment by design, not by omission. Agents interrogate the system; they never mutate it. An agent holding this endpoint can reconstruct an incident timeline or verify a Groth16 proof, but cannot touch the system it is examining. The mutating surfaces that do exist (chaos injection, auto‑remediation) live behind the operator API with their own keys and kill switches, not behind MCP. This is the read‑only‑by‑default principle working as intended.
 
 ---
 
@@ -43,7 +69,7 @@ Solvency proofs are generated every 60 seconds — the Groth16 proof is verified
 
 ### 3. "What exactly happened during my trade?"
 
-Every trade generates 17+ distributed trace spans across 4 services. End‑users can follow the exact path their order took — from browser to matcher to wallet update.
+A trade typically generates 17+ spans across 4 services on the full RabbitMQ trade path (observed in demo traces). End‑users can follow the exact path their order took — from browser to matcher to wallet update.
 
 | Tool | What it does |
 |------|-------------|
@@ -98,13 +124,13 @@ The most common on‑call question. The MCP server lets an AI agent correlate tr
 | `traces_search` | Find slow traces with `min_duration` filter |
 | `trace_get` | Drill into the slowest trace — identify which span is the bottleneck |
 | `metrics_query` | Check resource metrics (CPU, memory, event loop lag) at the time of the spike |
-| `logs_tail_context` | Get logs correlated with the slow trace ID |
+| `grafana_datasource_query` | Pull logs for the slow trace ID — LogQL through Grafana's Loki datasource proxy (the direct `logs_tail_context` tool is [BACKLOG on the live deployment]) |
 
 **Example workflow:**
 > *"Why is P99 latency at 2s?"*  
 > → `traces_search` with `min_duration: "1s"` → finds 3 slow traces  
 > → `trace_get` on the slowest → `pg.query` span took 1.8s  
-> → `logs_tail_context` with trace ID → finds "slow query: SELECT ... WHERE NOT EXISTS" log  
+> → `grafana_datasource_query` (LogQL filtered on the trace ID) → finds "slow query: SELECT ... WHERE NOT EXISTS" log  
 > → `metrics_query` for `pg_stat_activity_count` → "Database connections at 89/100. Slow query + connection saturation."
 
 ---
@@ -147,15 +173,16 @@ Service topology with health overlays — understand not just what's broken, but
 
 Correlate logs with traces using the shared trace ID — the three pillars of observability unified through one query.
 
+**[BACKLOG on the live deployment]:** the dedicated `logs` skill (`logs_query`, `logs_labels`, `logs_label_values`, `logs_tail_context`) ships in [otel-mcp-server v1.2.0](../otel-mcp-server/README.md) but no `logs_*` tools are exposed on the live lab as of 2026-07-05. Self‑hosters who set `LOKI_URL` get all four. On the live deployment, an agent reaches the same logs two ways today:
+
 | Tool | What it does |
 |------|-------------|
-| `logs_query` | LogQL queries — filter by app, level, component, keyword |
-| `logs_tail_context` | Find all logs across all services that mention a specific trace ID |
-| `logs_labels` / `logs_label_values` | Discover available log labels and their values |
+| `grafana_datasource_query` | Run LogQL through Grafana's datasource proxy against the provisioned Loki datasource — filter by app, level, keyword, or trace ID |
+| `trace_get` | Span‑level events and error tags for a specific trace — often enough to answer "what went wrong" without leaving the trace |
 
-**Example:**
+**Example (via the Grafana proxy):**
 > *"Show me error logs from the payment processor in the last 15 minutes"*  
-> → `logs_query` with `{app="payment-processor"} |= "error"` → "3 error logs found: 'AMQP connection reset', 'Failed to acknowledge message', 'Reconnecting to RabbitMQ'. All within a 2‑second window at 09:47:12."
+> → `grafana_datasource_query` with `{app="payment-processor"} |= "error"` → "3 error logs found: 'AMQP connection reset', 'Failed to acknowledge message', 'Reconnecting to RabbitMQ'. All within a 2‑second window at 09:47:12."
 
 ---
 
@@ -253,12 +280,13 @@ Investors and board members ask this after every outage. The MCP server lets an 
 | `anomalies_active` | What anomalies were detected, at what severity |
 | `metrics_alerts` | Which alerts fired, when, and for how long |
 | `traces_search` | Affected traces during the incident window |
-| `logs_query` | Error logs correlated with the incident timeframe |
+| `alertmanager_alerts` | Which alerts reached Alertmanager, with labels and routing status |
+| `grafana_datasource_query` | Error logs correlated with the incident timeframe (LogQL via the Loki datasource; direct `logs_query` is [BACKLOG on the live deployment]) |
 | `metrics_query_range` | Metric graphs showing degradation and recovery |
 
 **Example:**
 > *"What happened yesterday at 3pm?"*  
-> → `metrics_alerts` for firing history + `logs_query` for errors in window + `traces_search` for slow traces → "At 14:58 UTC, PriceFeedUnavailable fired (Binance WebSocket disconnected). Self‑healing reconnected at stage 1 within 8 seconds. 3 trades experienced 200ms additional latency during the 8s window. No failed trades. Alert auto‑resolved at 14:59. Total customer impact: 8 seconds of degraded price freshness, zero order failures."
+> → `metrics_alerts` for firing history + `grafana_datasource_query` for error logs in window + `traces_search` for slow traces → "At 14:58 UTC, PriceFeedUnavailable fired (Binance WebSocket disconnected). Self‑healing reconnected at stage 1 within 8 seconds. 3 trades experienced 200ms additional latency during the 8s window. No failed trades. Alert auto‑resolved at 14:59. Total customer impact: 8 seconds of degraded price freshness, zero order failures."
 
 ---
 
@@ -272,7 +300,7 @@ The north‑star engagement metric. The MCP server derives real‑time active us
 |------|-------------|
 | `metrics_query` | Active sessions, authenticated request rate, WebSocket connections |
 | `metrics_query_range` | DAU/MAU trends, peak‑hour patterns, week‑over‑week growth |
-| `logs_query` | Login events — count distinct users from auth logs |
+| `grafana_datasource_query` | Login events — count distinct users from auth logs (LogQL via the Loki datasource; direct `logs_query` is [BACKLOG on the live deployment]) |
 
 **Example:**
 > *"How many users are online right now?"*  
@@ -306,11 +334,11 @@ Every step from registration to first trade is instrumented with OpenTelemetry s
 | `traces_search` | Find traces for each funnel step: registration, email verification, first order |
 | `traces_operations` | List all operations per service — see which endpoints are called |
 | `metrics_query` | Request counts per endpoint — compare signup vs deposit vs trade counts |
-| `logs_query` | Error/validation failure logs at each step — why users fail |
+| `grafana_datasource_query` | Error/validation failure logs at each step — why users fail (LogQL via the Loki datasource; direct `logs_query` is [BACKLOG on the live deployment]) |
 
 **Example:**
 > *"Where's the funnel leaking?"*  
-> → `metrics_query` for request counts at each step → "Last 7 days: 340 registrations → 289 email verifications (85%) → 121 first trades (42%). Biggest drop: verification‑to‑first‑trade. `logs_query` shows 34 order attempts failed validation with 'insufficient balance' — new users are trying to place orders larger than their starter balance."
+> → `metrics_query` for request counts at each step → "Last 7 days: 340 registrations → 289 email verifications (85%) → 121 first trades (42%). Biggest drop: verification‑to‑first‑trade. `grafana_datasource_query` shows 34 order attempts failed validation with 'insufficient balance' — new users are trying to place orders larger than their starter balance."
 
 ---
 
@@ -348,33 +376,68 @@ The link between engineering metrics and business outcomes. The MCP server corre
 
 ---
 
-## Quick Reference: All 23 Tools
+## Quick Reference: All 43 Deployed Tools
 
-| Domain | Tool | Purpose |
+As deployed on the live lab, 2026-07-05 — read from a live MCP connection, all read‑only.
+
+| Skill | Tool | Purpose |
 |--------|------|---------|
-| **Traces** | `traces_search` | Find traces by service, operation, tags, duration |
+| **Traces** (5) | `traces_search` | Find traces by service, operation, tags, duration |
 | | `trace_get` | Full trace detail — all spans, timing, tags, logs |
 | | `traces_services` | List all traced services |
 | | `traces_operations` | List operations for a service |
 | | `traces_dependencies` | Service dependency graph with call counts |
-| **Metrics** | `metrics_query` | Instant PromQL query |
+| **Metrics** (6) | `metrics_query` | Instant PromQL query |
 | | `metrics_query_range` | Time‑series PromQL query |
+| | `metrics_label_values` | Label value enumeration |
+| | `metrics_metadata` | Metric type, help, unit |
 | | `metrics_targets` | Prometheus scrape target health |
 | | `metrics_alerts` | Alert rules and their state |
-| | `metrics_metadata` | Metric type, help, unit |
-| | `metrics_label_values` | Label value enumeration |
-| **Logs** | `logs_query` | LogQL query for log lines |
-| | `logs_labels` | Available log label names |
-| | `logs_label_values` | Values for a log label |
-| | `logs_tail_context` | Logs correlated with a trace ID |
-| **ZK Proofs** | `zk_proof_get` | Retrieve trade proof |
-| | `zk_proof_verify` | Verify trade proof |
+| **Alertmanager** (4) | `alertmanager_alerts` | Active alerts with labels, annotations, routing status |
+| | `alertmanager_groups` | Alert groups by routing rules and receivers |
+| | `alertmanager_silences` | Active/pending/expired silences with matchers |
+| | `alertmanager_status` | Cluster status, version, live config |
+| **Grafana** (10) | `grafana_health` | Grafana instance health and version |
+| | `grafana_dashboards_search` | Search dashboards by title or tag |
+| | `grafana_dashboard_get` | Full dashboard definition — panels and queries |
+| | `grafana_datasources` | List provisioned datasources |
+| | `grafana_datasource_health` | Connectivity check for a datasource |
+| | `grafana_datasource_query` | Query through a datasource proxy (PromQL, LogQL, …) |
+| | `grafana_folders` | Dashboard folder listing |
+| | `grafana_alert_rules` | Grafana‑managed alert rules |
+| | `grafana_alerts` | Current Grafana alert states |
+| | `grafana_contact_points` | Notification contact points |
+| **vmalert** (4) | `vmalert_alerts` | Active vmalert alerts |
+| | `vmalert_groups` | Rule groups |
+| | `vmalert_rule_health` | Per‑rule evaluation health |
+| | `vmalert_rules` | Recording and alerting rules |
+| **Anomalies** (2) | `anomalies_active` | Current anomalies (SEV 1–5) |
+| | `anomalies_baselines` | Anomaly detection baselines per operation |
+| **ZK Proofs** (4) | `zk_proof_get` | Retrieve trade proof |
+| | `zk_proof_verify` | Verify trade proof (server‑side Groth16 verification) |
 | | `zk_solvency` | Latest solvency proof |
 | | `zk_stats` | Aggregate proof statistics |
-| **System** | `anomalies_active` | Current anomalies (SEV 1–5) |
-| | `anomalies_baselines` | Anomaly detection baselines per operation |
-| | `system_health` | Full system health check |
+| **System / Public Exchange** (8) | `system_health` | Full system health check |
 | | `system_topology` | Service dependency topology with health overlays |
+| | `exchange_status` | Public exchange status |
+| | `recent_trades` | Anonymized recent trades |
+| | `total_volume` | Traded volume totals |
+| | `transparency_metrics` | Public transparency metrics |
+| | `verify_trace` | Verify any trade's trace end‑to‑end |
+| | `backend_capabilities` | Which backends and skills this deployment exposes |
+
+*Not deployed: the `logs_*` skill (4 tools, documented in [otel-mcp-server v1.2.0](../otel-mcp-server/README.md)) — [BACKLOG on the live deployment]; see Q9 for the workaround.*
+
+---
+
+## Two MCP Servers, One Thesis
+
+Krystaline ships two MCP servers with different jobs:
+
+- **Embedded server** ([`server/mcp/index.ts`](../server/mcp/index.ts)) — 28 tools compiled into the exchange itself (`npm run mcp`, or HTTP on port 3100 via `npm run mcp:http`). It carries the operator‑grade extras that need in‑process access: `bayesian_health` / `bayesian_insights` / `bayesian_train`, `alert_rca`, and `alert_rca_train`. Built for local development and operators.
+- **Standalone [`otel-mcp-server`](../otel-mcp-server/README.md)** — the one deployed on the live lab for public transparency. It speaks only to standard backends (Jaeger, Prometheus, Loki, Elasticsearch, Alertmanager) plus the public app API, so it works against any OpenTelemetry stack, not just Krystaline's.
+
+Both exist for the same reason: the system's claims should be checkable by an agent that isn't the system. See [architecture/01_ARCHITECTURE.md](architecture/01_ARCHITECTURE.md) for where each sits in the stack.
 
 ---
 

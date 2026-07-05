@@ -1,24 +1,27 @@
 # Krystaline — Investor Demo Script
 
-> **Purpose:** Curated presenter script for investor meetings  
-> **Duration:** 20–25 minutes (expandable to 35 with Q&A)  
-> **Audience:** Regional lead investor + technical advisors  
+> **Purpose:** Curated presenter script for investor meetings — the canonical investor demo  
+> **Duration:** 25–30 minutes (expandable to 40 with Q&A)  
+> **Audience:** Regional lead investor + technical advisors — full narration, Q&A prep, and recovery playbook  
 > **Environment:** Live at `www.krystaline.io` (Kubernetes)  
-> **Updated:** 2026-03-18
+> **Role in the demo arc:** the canonical investor demo. Condensed technical cue cards: [../DEMO.md](../DEMO.md). Self-serve localhost version: [03_DEMO_WALKTHROUGH.md](03_DEMO_WALKTHROUGH.md). Extended MCP playbook: [../MCP_TOP_20_QUESTIONS.md](../MCP_TOP_20_QUESTIONS.md)  
+> **Updated:** 2026-07-05
 
 ---
 
 ## Narrative Arc
 
 ```
+COLD OPEN  Verify First      (1 min)   curl one trade's Groth16 verdict — before any story
 ACT 1  The Problem           (3 min)   Why exchanges fail at trust
 ACT 2  The Promise           (2 min)   Proof of Observability landing page
-ACT 3  Real Platform         (3 min)   Register → Login → Trade (credibility)
+ACT 3  Real Platform         (3 min)   Login → Trade (registration happens in setup)
 ACT 4  The Complete Picture  (5 min)   Tracing + Exemplars + Logs = audit trail
 ACT 5  Automated Detection   (4 min)   Anomaly detector catches what humans miss
 ACT 6  AI Diagnosis          (3 min)   LLM-powered root cause in plain English
 ACT 7  Cryptographic Trust   (3 min)   ZK proofs — verify, don't trust
-ACT 8  The Moat              (2 min)   Why this is defensible + the ask
+ACT 8  Ask the Exchange      (3 min)   An AI agent interrogates the platform over MCP
+ACT 9  The Moat              (2 min)   Why this is defensible + the ask
 ```
 
 **Core thesis:** *"Other exchanges say 'trust us.' We say 'verify it yourself.'"*
@@ -34,21 +37,40 @@ ACT 8  The Moat              (2 min)   Why this is defensible + the ask
 curl -X POST https://www.krystaline.io/api/v1/monitor/recalculate
 
 # Execute 5–10 test trades to populate traces
-# (Use a pre-registered test account or register fresh)
+# (Use the pre-registered demo account from step 2)
 ```
 
-### 2. Open Browser Tabs (in order)
+### 2. Register the Demo Account (registration is setup, not showtime)
+
+- Navigate to `/register` → `investor-demo@krystaline.io` / `InvestorDemo2026!`
+- Complete the email verification flow, confirm login works, then log out
+- Keep one of the warm-up trades' `tradeId` handy — the cold open needs it
+
+Live registration burns ~90 seconds of email-code fumbling. Do it before the
+meeting; Act 3 opens with a clean login instead.
+
+### 3. Connect the MCP Client (for Act 8)
+
+- Point Claude Desktop, VS Code Copilot, or any MCP client at `otel-mcp-server`
+  (v1.2.0 — 32 read-only tools across 7 skills; locally: `npm run mcp` for the
+  embedded 28-tool server)
+- Sanity-ask: *"Is the system healthy?"* — it should call `system_health` and
+  answer within seconds
+
+### 4. Open Browser Tabs (in order)
 
 | Tab | URL | Purpose |
 |-----|-----|---------|
 | 1 | `https://www.krystaline.io` | Landing page (Act 2) |
-| 2 | `https://www.krystaline.io/register` | Registration (Act 3) |
+| 2 | `https://www.krystaline.io/login` | Login (Act 3) |
 | 3 | `https://www.krystaline.io/jaeger/` | Jaeger traces (Act 4) |
 | 4 | `https://www.krystaline.io/grafana/` | Grafana dashboards (Act 4) |
 | 5 | `https://www.krystaline.io/monitor` | Anomaly monitor (Act 5–6) |
 | 6 | `https://www.krystaline.io/transparency` | Transparency page (Act 7) |
 
-### 3. Verify Everything Works
+Plus: a terminal with a large font (cold open) and the connected MCP client (Act 8).
+
+### 5. Verify Everything Works
 
 ```bash
 # Health check
@@ -62,6 +84,32 @@ curl -s https://www.krystaline.io/api/public/zk/stats | jq '.totalProofsGenerate
 curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 # → "llama3.2:1b"
 ```
+
+---
+
+## The 60-Second Cold Open — Verify First
+
+> **Action:** Before any narrative. Terminal open, font large. Use a `tradeId`
+> from a warm-up trade (the trade toast, `/activity`, or `GET /api/public/trades`).
+
+```bash
+curl -s https://www.krystaline.io/api/public/zk/verify/<tradeId> | jq
+```
+
+### What to Say
+
+> "Before I tell you anything, let me show you the only thing that matters.
+> This is a real trade on our exchange, and this" — *[point at the verdict]* —
+> "is its zero-knowledge integrity proof being verified right now. The server
+> just ran a real `snarkjs.groth16.verify()` against a committed verification
+> key. That's not a status flag someone set — it's a mathematical verdict, and
+> the endpoint is public. No account, no API key, no trust."
+>
+> "Everything in the next twenty-five minutes exists to make that one HTTP
+> response possible. Our thesis in one line: financial infrastructure should be
+> verifiable **before** it asks anyone to trust it."
+
+*[Close the terminal. Now start the story.]*
 
 ---
 
@@ -116,27 +164,24 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 ## ACT 3 — A Real Platform (3 minutes)
 
-> **Action:** Switch to Tab 2 — Register a new account live
+> **Action:** Switch to Tab 2 — Log in with the demo account you registered
+> during setup
 
-### Step 1: Register
+### Step 1: Log In
 
-> "Let me create an account right now so you can see this isn't a mockup."
-
-- Navigate to `/register`
+- Navigate to `/login`
 - Enter: `investor-demo@krystaline.io` / `InvestorDemo2026!`
-- Submit → "Check your email for verification code"
-
-### Step 2: Verify & Login
-
-- Show the email verification flow (MailDev or bypass code in dev)
-- Complete verification → Login with credentials
 - Redirected to `/portfolio`
 
 ### What to Say
 
-> "Real email verification, real JWT authentication with refresh tokens, real bcrypt password hashing at cost factor 12. This is production-grade security, not a prototype."
+> "I created this account before you arrived, through the same flow every user
+> gets: real email verification, real JWT authentication with refresh tokens,
+> real bcrypt password hashing at cost factor 12. Registration is
+> production-grade and boring to watch — which is exactly why I didn't make you
+> watch it. What's not boring is what happens when we trade."
 
-### Step 3: Execute a Trade
+### Step 2: Execute a Trade
 
 - Navigate to `/trade`
 - Point out: "That price — $XX,XXX — is live from Binance's WebSocket feed. Updated every 3 seconds."
@@ -174,9 +219,9 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 >
 > "Here's the request hitting our API gateway — Kong — that's this first span. It does rate limiting, authentication, CORS — all before your request even reaches our code."
 >
-> "Then it hits our Express API. You can see the POST to `/api/v1/trade/order`. Notice the timing — 3 milliseconds for validation."
+> "Then it hits our Express API. You can see the POST to `/api/v1/orders`. Notice the timing — 3 milliseconds for validation."
 >
-> "Now here's where it gets interesting. This span — `amqp.publish` — is your order being published to RabbitMQ. And this span below it — `order.match` — that's our order matching engine, running in a completely separate microservice, picking up your order from the queue and finding a match."
+> "Now here's where it gets interesting. This span — `publish orders` — is your order being published to RabbitMQ. And this span below it — `order.match` — that's our order matching engine, running in a completely separate microservice, picking up your order from the queue and finding a match."
 >
 > "Notice the trace ID at the top. It's the same across all of these services. That's W3C Trace Context — an open standard — propagating through HTTP headers and message queue headers so every operation is linked into one story."
 
@@ -226,11 +271,11 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 ### 5A: Time-Aware Baselines
 
-> "But here's what makes our system different from simple threshold alerts. We use **time-aware baselines** — 168 buckets, one for each hour of the week."
+> "But here's what makes our system different from simple threshold alerts. We use **time-aware baselines** — 168 buckets per span key, one for each hour of the week."
 >
 > "Think about it: your exchange handles different traffic at Monday 9am versus Sunday 3am. A 200ms response that's totally normal during peak hours would be alarming at 3am when the system is idle. Our baselines capture that."
 >
-> "The algorithm is called **Welford's Online Algorithm** — it calculates running mean and standard deviation in a single pass, without storing millions of historical data points. It's memory-efficient and mathematically stable."
+> "And we deliberately use two different algorithms. Duration baselines are recomputed in a two-pass batch with Bessel's correction, so the variance estimates are unbiased. Transaction **amounts** use **Welford's Online Algorithm** — running mean and standard deviation in a single pass, memory-efficient and numerically stable — because whale detection has to update on every single trade, in real time."
 
 ### 5B: Severity Classification
 
@@ -238,9 +283,9 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 > *[Point to severity badges in the anomaly table]*
 
-> "A SEV5 is 6.6 standard deviations — unusual but not urgent. A SEV1 is over 20 standard deviations — something is seriously wrong."
+> "A SEV5 fires at 3 standard deviations above baseline — unusual, not urgent. A SEV1 needs 8 or more — something is seriously wrong. And no baseline is allowed to fire with fewer than 10 samples behind it, so a cold start can't page anyone."
 >
-> "But we don't just detect latency anomalies. We also profile **transaction amounts**. If someone suddenly tries to withdraw 100x their normal amount, our amount anomaly detector flags it immediately — we call it **whale detection**."
+> "But we don't just detect latency anomalies. We also profile **transaction amounts** on their own 3-to-7-sigma ladder. If someone suddenly tries to withdraw 100x their normal amount, our amount anomaly detector flags it immediately — we call it **whale detection**."
 >
 > "This is fully autonomous. No human sets thresholds. The system learns from its own data."
 
@@ -287,6 +332,8 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 > *[When analysis completes, read the summary]*
 
 > "See this? It identified the likely cause, gave us three recommendations ranked by priority, and rated its own confidence. This is a structured first-pass triage in ~2 seconds that on-call then verifies — instead of 30 minutes of manual investigation."
+>
+> "And one boundary we never cross: **the LLM never pages anyone**. Alertmanager and GoAlert page deterministically, from fixed rules. The AI writes the first draft — its analysis is written back into the firing alert's annotations ([`server/monitor/alertmanager-notifier.ts`](../../server/monitor/alertmanager-notifier.ts)) so on-call opens the page with the triage already attached — and humans decide."
 
 ### 6A: The Training Loop
 
@@ -294,7 +341,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 > "But here's the part that makes this a flywheel, not just a feature. See these rating buttons? When our engineers use this in production, they rate whether the analysis was helpful. Bad ratings include a correction — 'here's what you should have said.'"
 >
-> "Those corrections feed directly into our fine-tuning pipeline. We use **LoRA** — Low-Rank Adaptation — to tune the model on our specific infrastructure patterns. Only 0.4% of the model's parameters are modified. The result? A model that gets smarter about *our* system every week, running on commodity hardware. No GPU cluster needed."
+> "Those corrections feed directly into our fine-tuning pipeline. We use **LoRA** — Low-Rank Adaptation — to tune the model on our specific infrastructure patterns. Only 0.4% of the model's parameters are modified. The result? A model that gets smarter about *our* system with every operator correction — the retraining pipeline is one command in the repo — running on commodity hardware. No GPU cluster needed."
 >
 > "The training data, the fine-tuning configuration, the merged model weights — it's all in our repository. Reproducible, version-controlled AI operations."
 
@@ -359,13 +406,57 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 > **Action:** Show ZK stats (on transparency page or via API)
 
-> "Total proofs generated, average proving time — about 200 milliseconds per proof — verification success rate near 100%. And the solvency proof age tells you how recent the latest proof is. It's never more than 60 seconds old."
+> "Total proofs generated, average proving time — read it off the live stats; a 2026-07-05 benchmark against the committed circuit artifacts measured 129–152 ms warm proving and 12–20 ms verification, on a 724-byte proof — verification success rate near 100%. And the solvency proof age tells you how recent the latest proof is. It's never more than 60 seconds old."
 >
 > "Traditional exchanges prove solvency once a year with an accounting firm. We run that check every minute with mathematics — the proof is verified server-side, and the Poseidon commitment is published publicly."
 
 ---
 
-## ACT 8 — The Moat (2 minutes)
+## ACT 8 — Ask the Exchange (3 minutes)
+
+> **Action:** Switch to the MCP client you connected during setup (Claude
+> Desktop or Copilot pointed at `otel-mcp-server` — 32 read-only tools across
+> 7 skills, v1.2.0).
+
+### What to Say
+
+> "One last thing before I step back. Everything you've just seen — the traces,
+> the metrics, the proofs — isn't only for humans staring at dashboards. It's
+> exposed to AI agents through MCP, the Model Context Protocol. Watch what
+> happens when I let an agent interrogate the exchange."
+
+### Question 1: "Why is P99 elevated?"
+
+> **Action:** Type the question into the MCP client. Narrate the tool calls as
+> they appear.
+
+> "See what it's doing? It called `traces_search` — that's a live query against
+> Jaeger for the slowest recent traces. Now `trace_get` — it's pulling the full
+> span waterfall for the worst one. And its answer cites the actual slow span,
+> in the actual service. It's answering from spans, not vibes — the same
+> evidence a human SRE would use, through governed, read-only tools."
+
+### Question 2: "Verify my last trade."
+
+> **Action:** Ask the second question. Let the verdict land.
+
+> "Now the part I care about most. The agent just called `zk_proof_verify`,
+> which hits the same public endpoint I curled in the first sixty seconds —
+> `GET /api/public/zk/verify/:tradeId` — and a real `snarkjs.groth16.verify()`
+> ran server-side. The agent didn't ask us to vouch for the trade. It checked
+> the math itself."
+>
+> "That's the thesis completing the loop: 'verifiable before it asks anyone to
+> trust it' — and *anyone* now includes machines. When your customers' AI
+> assistants audit their brokers, we're the exchange that already answers."
+
+> **Fallback:** If the live MCP connection misbehaves, show the extended
+> playbook instead: [../MCP_TOP_20_QUESTIONS.md](../MCP_TOP_20_QUESTIONS.md) —
+> twenty questions the tools answer, with example transcripts.
+
+---
+
+## ACT 9 — The Moat (2 minutes)
 
 > **Action:** No screen needed. Eye contact with the investor.
 
@@ -373,15 +464,17 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 > "Let me step back and tell you why this matters as an investment."
 >
-> "We've combined four technologies that no other exchange has put together:"
+> "We've combined five technologies that no other exchange has put together:"
 
-> "**First: Distributed tracing** — 17 spans per trade, full audit trail, using the CNCF standard that Google, AWS, and Microsoft are converging on. This isn't proprietary. It's the future of how all software will be instrumented."
+> "**First: Distributed tracing** — typically 17+ spans on the full trade path, full audit trail, using the CNCF standard that Google, AWS, and Microsoft are converging on. This isn't proprietary. It's the future of how all software will be instrumented."
 >
 > "**Second: Autonomous anomaly detection** — time-aware baselines that learn from traffic patterns, whale detection on transaction amounts, real-time WebSocket alerts. No thresholds to configure. No humans to watch dashboards."
 >
-> "**Third: AI-powered diagnosis** — a locally-hosted LLM that's being fine-tuned specifically on our infrastructure patterns. It gets smarter every week. The training pipeline is in our repo — reproducible, auditable AI ops."
+> "**Third: AI-powered diagnosis** — a locally-hosted LLM that's being fine-tuned specifically on our infrastructure patterns. It gets smarter with every operator correction. The training pipeline is in our repo — reproducible, auditable AI ops."
 >
 > "**Fourth: Cryptographic verification** — Groth16 zero-knowledge proofs on every trade, publicly verifiable without trusting our infrastructure, plus a solvency proof every 60 seconds — verified server-side, with the Poseidon commitment published publicly."
+>
+> "**Fifth: Agent-ready access** — the whole evidence layer, traces to proofs, is exposed to AI agents through governed, read-only MCP tools. You just watched an agent verify a trade cryptographically. No other exchange can demo that."
 
 ### The Competitive Position
 
@@ -413,7 +506,7 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 ### "Can you fake a ZK proof?"
 
-> "No. The Groth16 protocol is cryptographically secure under the BN128 elliptic curve. The proving key (zkey) is kept secret — it's what generates proofs. The verification key is public — anyone can verify. Even we can't generate a valid proof for a trade that didn't happen with those exact parameters. The math won't allow it."
+> "No. The Groth16 protocol is cryptographically secure under the BN128 elliptic curve. The proving and verification keys are both public — they're committed in our repo. Groth16 soundness doesn't rely on key secrecy: even with the proving key, nobody — including us — can generate a valid proof for a trade that didn't happen with those exact parameters. The math won't allow it."
 
 ### "What's your uptime SLA?"
 
@@ -425,11 +518,11 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 ### "What about compliance / regulatory?"
 
-> "Our audit trail is immutable — OpenTelemetry traces in Jaeger, security events in PostgreSQL with hash chains for tamper detection, and ZK proofs that cryptographically anchor every trade to its execution details. We export security events to any SIEM via webhook. We have 34 alert rules covering everything from brute force detection to circuit breaker monitoring. And our transparency page gives regulators real-time visibility without needing access to our internal systems."
+> "Our audit trail is immutable — OpenTelemetry traces in Jaeger, security events in PostgreSQL with hash chains for tamper detection, and ZK proofs that cryptographically anchor every trade to its execution details. We export security events to any SIEM via webhook. We have 48 alert rules in 11 groups covering everything from brute force detection to circuit breaker monitoring. And our transparency page gives regulators real-time visibility without needing access to our internal systems."
 
 ### "What's the team size?"
 
-> *[Adjust to your actual team]* "We're a small team that punches above our weight because of our engineering philosophy: everything is tested (1,100+ passing automated tests: 1,088 in the main suite + 99 in otel-mcp-server), everything is instrumented (17 spans per trade), and everything is automated (anomaly detection, AI diagnosis, ZK proof generation). Our observability infrastructure is itself observable."
+> *[Adjust to your actual team]* "We're a small team that punches above our weight because of our engineering philosophy: everything is tested (1,100+ passing automated tests: 1,088 in the main suite + 99 in otel-mcp-server), everything is instrumented (typically 17+ spans per trade path), and everything is automated (anomaly detection, AI diagnosis, ZK proof generation). Our observability infrastructure is itself observable."
 
 ---
 
@@ -453,11 +546,15 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 ### If RabbitMQ Is Down
 
-> Orders still work via synchronous fallback. Say: "Notice something interesting — the order still went through. That's our circuit breaker pattern. When RabbitMQ is unavailable, we fall back to synchronous processing. Graceful degradation, not failure."
+> Orders are rejected fast with a clear "Order matching service unavailable" error — there is no synchronous fallback, so don't claim one. The circuit breaker (opens after 3 consecutive failures) keeps rejections immediate instead of letting requests hang. Restart RabbitMQ, confirm a trade goes through, then continue. If a rejection happened on screen, say: "Notice the order failed fast with a clear error instead of hanging — fail-fast by design, so the failure is visible and diagnosable, not hidden."
 
 ### If ZK Proof Isn't Available Yet
 
-> Proofs are generated asynchronously (150–300ms after trade). Wait a few seconds and refresh. Say: "The proof is being generated in the background — it takes about 200 milliseconds. It never blocks the trading path."
+> Proofs are generated asynchronously, moments after the fill (a 2026-07-05 benchmark measured 129–152 ms warm proving). Wait a few seconds and refresh. Say: "The proof is being generated in the background — on the order of 150 milliseconds. It never blocks the trading path."
+
+### If the MCP Client Won't Connect (Act 8)
+
+> Don't debug live. Switch to the extended playbook — [../MCP_TOP_20_QUESTIONS.md](../MCP_TOP_20_QUESTIONS.md) — and walk through the "Was my trade executed at a fair price?" transcript. Say: "Let me show you the transcript of exactly this conversation instead."
 
 ---
 
@@ -470,13 +567,14 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 | **API Gateway** | Kong | Rate limiting (300/min general, 60/min auth) |
 | **Backend** | Express + TypeScript | P95 < 500ms SLO |
 | **Frontend** | React 18 + Vite | Web Vitals (LCP, INP, CLS) |
-| **Database** | PostgreSQL 17 | Port 5433, Drizzle schema |
-| **Message Queue** | RabbitMQ 4.0 | Circuit breaker with 50% → open threshold |
-| **Tracing** | OpenTelemetry → Jaeger | 17+ spans per trade |
-| **Metrics** | Prometheus + Grafana | 17 recording rules, 34 alert rules |
-| **Anomaly Detection** | Welford's Algorithm | 168 hourly buckets, SEV 1–5 |
-| **AI/LLM** | Ollama + Llama 3.2:1B | ~200ms inference, LoRA fine-tuned |
-| **ZK Proofs** | Groth16 (snarkjs) | ~200ms proving, BN128 curve |
+| **Database** | PostgreSQL 15 | Port 5433, Drizzle schema |
+| **Message Queue** | RabbitMQ 3.12 | Circuit breaker: opens after 3 consecutive failures, closes after 2 successes |
+| **Tracing** | OpenTelemetry → Jaeger | Typically 17+ spans per trade path |
+| **Metrics** | Prometheus + Grafana | 48 alert rules in 11 groups |
+| **Anomaly Detection** | Two-pass baselines + Welford (amounts) | 168 buckets/span key, SEV1–5 at 3σ–8σ, whale 3–7σ |
+| **AI/LLM** | Ollama + Llama 3.2:1B | Streaming RCA, LoRA fine-tuned (r=16/α=32) |
+| **ZK Proofs** | Groth16 (snarkjs) | 129–152 ms warm proving (2026-07-05 benchmark), BN128 curve |
+| **MCP** | otel-mcp-server v1.2.0 + embedded server | 32 tools / 7 skills standalone, 28 tools embedded |
 | **Alerting** | Alertmanager → GoAlert | Multi-window burn rate (14.4x/6x/3x/1x) |
 | **Deployment** | Kubernetes (3 nodes) | Helm charts, Cloudflare tunnel |
 | **Tests** | Vitest + Playwright | 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server), API smoke + E2E |
@@ -529,7 +627,7 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 **Pillar 1 — Tracing:** Every trade generates a complete distributed trace across all services, with W3C context propagation through HTTP and message queues. Exemplars bridge metrics to traces in one click.
 
-**Pillar 2 — Anomaly Detection:** Welford's online algorithm builds time-aware baselines (168 hourly buckets). Z-score deviation classifies anomalies from SEV5 (unusual) to SEV1 (critical). Amount profiling catches whale transactions. All autonomous — no human thresholds.
+**Pillar 2 — Anomaly Detection:** Time-aware baselines (168 hourly buckets per span key, two-pass Bessel-corrected variance) classify anomalies from SEV5 (3σ, unusual) to SEV1 (8σ, critical), with at least 10 samples required before any baseline can fire. Welford's online algorithm powers amount profiling, catching whale transactions on a 3–7σ ladder. All autonomous — no human thresholds.
 
 **Pillar 3 — AI Diagnosis:** Locally-hosted Llama 3.2 (1B parameters) receives rich context — span attributes, system metrics, full trace — and streams structured root cause analysis in real-time via WebSocket. LoRA fine-tuning on production feedback creates a continuously improving model.
 
@@ -541,4 +639,4 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 *Practice this script at least twice before the meeting. The power is in the live demo — let the technology speak for itself. Every claim is backed by real, running code.*
 
-*Environment: Kubernetes cluster at `www.krystaline.io` — Updated March 2026*
+*Environment: Kubernetes cluster at `www.krystaline.io` — Updated July 2026*

@@ -1,13 +1,14 @@
 # Krystaline Observability Lab
 ### Technical Architecture & Capabilities Overview
 
-**Version:** 2.0  
-**Date:** March 6, 2026  
+**Version:** 2.1  
+**Date:** July 5, 2026  
 **Classification:** Public  
 **Authors:** Carlos Montero & Antigravity (AI Assistant, Google DeepMind)  
 **Sessions:**  
 - `5dade5d5-ac60-4143-9ee9-97e7d22e1fa7` — v1.0 (Feb 7, 2026)  
 - `f0615ab8-927d-47ef-97bf-e1eeb4f812c5` — v2.0 (Mar 6, 2026)  
+- v2.1 (Jul 5, 2026) — accuracy revision: claims re-verified against the codebase; service table, trace tree, detector attribution, and metrics catalog corrected  
 
 ---
 
@@ -36,24 +37,25 @@ This architecture serves as a **scalable template for Unified, Consolidated Obse
 - **2 zk-SNARK circuits** (Groth16/BN128) — trade integrity + solvency  
 - **5-tier severity model** (SEV1–SEV5) calibrated to normal distribution percentiles  
 - **48 alert rules** across 11 groups with automated escalation  
-- **Sub-second anomaly detection** via Welford's online algorithm  
-- **AI-powered root-cause analysis** using LoRA-tuned Llama 3.2:1B (locally hosted)  
+- **Sub-second whale-transaction detection** — the event-driven amount detector updates baselines with Welford's online algorithm at execution time  
+- **AI-powered root-cause analysis** via locally hosted Llama 3.2:1B (Ollama), with an in-repo LoRA fine-tuning pipeline  
 - **1,100+ passing automated tests** (1,088 in the main suite + 99 in otel-mcp-server) ensuring regression-free deployments  
+
+**How to read this document.** Claims are tagged for verifiability — **[PUBLIC]** (verifiable directly in the open-source repository, at the cited file), **[CORE]** (implemented in the private core, not in this repo), **[BACKLOG]** (tracked but not yet built), **[ASPIRATIONAL]** (direction, no committed timeline), **[NON-GOAL]** (deliberately out of scope) — and unless tagged otherwise, everything below is [PUBLIC], because the thesis of this platform is that it should be verifiable before it asks anyone to trust it.
 
 ---
 
 ## 2. Platform Introduction
 
-Krystaline Observability Lab operates as a full-stack BTC/USD exchange demo with
-the following core services:
+Krystaline Observability Lab operates as a full-stack BTC/USD exchange demo. Four
+services appear in every full trade trace:
 
 | Service | Responsibility | Technology |
 |---------|---------------|------------|
-| **API Gateway** | Request routing, rate limiting, authentication | Kong Gateway + Node.js |
-| **Trading Engine** (`kx-exchange`) | Order lifecycle, wallet management, user accounts | Node.js + PostgreSQL |
-| **Order Matcher** (`kx-matcher`) | Order matching, execution, settlement | Node.js + RabbitMQ |
-| **Wallet Service** (`kx-wallet`) | Balance management, transfers, deposits/withdrawals | Node.js + PostgreSQL |
-| **Payment Processor** | Inter-service settlement via message queue | Node.js + RabbitMQ |
+| **Browser Client** (`kx-wallet`) | Trading UI; starts each trade's trace with a client-side `order.submit.client` span (`client/src/lib/otel.ts`) | React + OTel Web SDK |
+| **API Gateway** (`api-gateway`) | Request routing, rate limiting | Kong Gateway |
+| **Trading Engine** (`kx-exchange`) | Express API: order lifecycle, wallet management and settlement, user accounts, zk proof generation | Node.js + PostgreSQL |
+| **Order Matcher** (`kx-matcher`) | Order matching and execution — the `payment-processor/` process (formerly "Payment Processor"), consuming the legacy `payments` queue and replying on `payment_response` | Node.js + RabbitMQ |
 
 The platform processes trades against a **live Binance WebSocket price feed**, ensuring non-simulated, deterministic pricing. Users interact through a React frontend that surfaces real-time system health, trace-verified activity feeds, and per-operation performance data — directly in the trading interface.
 
@@ -103,7 +105,7 @@ Every user action (login, trade, transfer) generates telemetry that flows throug
 ```mermaid
 flowchart LR
     U[User Action] --> S[Application Services]
-    S -->|OTLP gRPC| J[Jaeger]
+    S -->|OTLP HTTP| J[Jaeger]
     S -->|HTTP /metrics| P[Prometheus]
     S -->|pino-loki| L[Loki]
     S -->|AMQP Events| R[RabbitMQ]
@@ -142,30 +144,13 @@ flowchart LR
 
 ---
 
-## 4. Statistical Anomaly Detection Engine
+## 4. Statistical Anomaly Detection Engine [PUBLIC]
 
 The core of Krystaline's intelligence layer is a **dual-mode statistical anomaly detection engine** that operates in real-time on both latency and transaction amount signals.
 
 ### 4.1 Latency Anomaly Detection
 
-The **Trace Profiler** continuously polls the Jaeger API every 30 seconds, collecting spans from all four monitored services. It calculates per-operation baselines using **Welford's online algorithm** — an incremental method that computes mean and variance in a single pass without storing historical values:
-
-```
-# Welford's Online Algorithm (as implemented)
-For each new observation x:
-    count += 1
-    delta = x - mean
-    mean += delta / count
-    delta2 = x - mean
-    M2 += delta * delta2
-    variance = M2 / count
-    stdDev = sqrt(variance)
-```
-
-This approach is critical for production systems because:
-- **O(1) memory** — no need to store millions of raw data points  
-- **Numerically stable** — avoids catastrophic cancellation in variance calculation  
-- **Incremental** — baselines refine continuously without batch recomputation  
+The **Trace Profiler** continuously polls the Jaeger API every 30 seconds, collecting spans from all four monitored services. Each poll computes per-operation batch statistics — sorted percentiles plus a two-pass mean/variance over the poll's spans (`server/monitor/trace-profiler.ts`, `updateBaselines`). On persistence, the **History Store** merges each batch **additively** into the stored baseline using weighted averaging for the mean and a pooled-variance formula for the standard deviation (`server/monitor/history-store.ts`), so restarts and new polls refine — rather than overwrite — institutional history. Separately, the **Baseline Calculator** recomputes time-bucketed baselines with a two-pass mean/variance calculation using Bessel's correction (`server/monitor/baseline-calculator.ts`, see §4.3).
 
 The **Anomaly Detector** then evaluates each incoming span against its operation baseline using **Z-score deviation**:
 
@@ -179,9 +164,9 @@ Anomalies are classified into a **5-tier severity model** calibrated to the perc
 |----------|-------------|------------|---------|
 | SEV-5 | >3.0σ | ~99.9th | Minor variance — monitoring only |
 | SEV-4 | >4.0σ | ~99.997th | Notable deviation — investigate |
-| SEV-3 | >5.0σ | >99.9999th | Significant anomaly — alert |
-| SEV-2 | >6.0σ | >99.9999th | Critical — immediate response |
-| SEV-1 | >8.0σ | >99.9999th | Catastrophic — page on-call |
+| SEV-3 | >5.0σ | ~99.99997th | Significant anomaly — alert |
+| SEV-2 | >6.0σ | ~99.9999999th | Critical — immediate response |
+| SEV-1 | >8.0σ | ≫99.9999999th (~10⁻¹⁵ tail) | Catastrophic — page on-call |
 
 *Source: `server/monitor/anomaly-detector.ts`*
 
@@ -201,9 +186,27 @@ A separate **Amount Anomaly Detector** monitors transaction volumes using the sa
 
 *Source: `server/monitor/types.ts` (WHALE_THRESHOLDS)*
 
-This detector is **event-driven** — it evaluates every order and transfer at execution time, providing sub-millisecond detection without polling overhead. It calculates approximate USD values using live price feeds and generates human-readable explanations:
+This detector is **event-driven** — it evaluates every order and transfer at execution time, providing sub-millisecond detection without polling overhead. Its baselines are updated incrementally with **Welford's online algorithm** (`server/monitor/amount-profiler.ts`, `recordTransaction`) — an incremental method that computes mean and variance in a single pass without storing historical values:
 
-> *"BUY order of 150.000 BTC (~$13,500,000) is 14.7σ above the historical mean. This transaction is 3 orders of magnitude larger than typical activity. SEV-2 flagged for immediate review."*
+```
+# Welford's Online Algorithm (as implemented)
+For each new observation x:
+    count += 1
+    delta = x - mean
+    mean += delta / count
+    delta2 = x - mean
+    variance = ((variance * (count - 1)) + delta * delta2) / count
+    stdDev = sqrt(variance)
+```
+
+This approach matters for an inline, event-driven detector because:
+- **O(1) memory** — no need to store millions of raw data points  
+- **Numerically stable** — avoids catastrophic cancellation in variance calculation  
+- **Incremental** — baselines refine on every transaction without batch recomputation  
+
+The detector calculates approximate USD values using live price feeds and generates human-readable explanations:
+
+> *"BUY order of 150.000 BTC (~$13,500,000) is 14.7σ above the historical mean. This transaction is 3 orders of magnitude larger than typical activity. SEV-1 flagged for immediate review."*
 
 ### 4.3 Time-Aware Baselines with Adaptive Thresholds
 
@@ -237,17 +240,31 @@ graph LR
 
 ### 4.4 Status Enrichment
 
-Each span baseline is enriched with a real-time **status indicator** that classifies the current hour's performance relative to its historical baseline:
+Each span baseline is enriched with a real-time **status indicator** — a 7-state `BaselineStatus` that separates three distinct signals: deviation of the current mean, deviation of the *rate of change* (slope), and sustained directional trend:
 
-| Status | Deviation Range | Dashboard Color |
-|--------|----------------|-----------------|
-| Excellent | < -1.5σ (faster than normal) | Blue |
-| Normal | -1.5σ to +1.0σ | Green |
-| Elevated | +1.0σ to +2.0σ | Yellow |
-| Degraded | +2.0σ to +3.0σ | Amber |
-| Critical | > +3.0σ | Red |
+| Status | Meaning | Dashboard Color |
+|--------|---------|-----------------|
+| `normal` | Performance within expected range | Green |
+| `above_mean` | Running slower than historical average (1–3σ) | Amber |
+| `below_mean` | Running faster than historical average (1–3σ) | Blue |
+| `slope_above` | Rate of change increasing (1–3σ) | Orange |
+| `slope_below` | Rate of change decreasing (1–3σ) | Cyan |
+| `upward_trend` | Consistent upward latency movement | Yellow |
+| `downward_trend` | Consistent downward latency movement | Teal |
+
+*Source: `server/monitor/types.ts` (`BaselineStatus`), rendered by `client/src/components/ui/baseline-status-badge.tsx`.*
 
 This feeds the **Deviation Mini-Chart** on the frontend — a spatial visualization plotting each latency point against its historical σ-bands, providing an instant "at a glance" performance proof.
+
+### 4.5 Bayesian Root-Cause Ranking
+
+Z-score detection gives a binary verdict. A dedicated Python microservice (`bayesian-service/`, FastAPI on port 8100) layers probabilistic reasoning on top of it, and the repo ships **two distinct Bayesian engines**:
+
+**Engine 1 — Hierarchical latency model** (`bayesian-service/app/models.py`). A hierarchical PyMC model places global hyperpriors over the whole fleet and per-service Normal/HalfNormal priors beneath them, so a service with sparse data borrows statistical strength from its peers instead of producing unstable estimates. Inference runs MCMC with 500 draws; when full sampling is not viable, the engine falls back to an **analytical conjugate posterior** computed directly from summary statistics — the answer degrades gracefully rather than disappearing.
+
+**Engine 2 — Noisy-OR alert correlation** (`bayesian-service/app/models.py` + `bayesian-service/app/poller.py`). When several alerts fire at once, a Noisy-OR Bayesian network ranks candidate root causes across them. Its parameters are not hand-tuned: an autonomous poller re-trains the network every 30 seconds (the default `POLL_INTERVAL`) from **resolved incidents** pulled from Alertmanager and enriched with **Prometheus exemplar trace IDs**, so each training example is anchored to the exact trace that was misbehaving when the alert fired.
+
+The division of labor is deliberate: statistical detection answers *"is this abnormal?"*; the Bayesian layer answers *"how likely is each cause?"*
 
 ---
 
@@ -255,19 +272,20 @@ This feeds the **Deviation Mini-Chart** on the frontend — a spatial visualizat
 
 ### 5.1 End-to-End Trace Propagation
 
-Every API request entering the platform via Kong Gateway receives an OpenTelemetry trace context that propagates through the entire service chain:
+Every trade's trace context is minted **in the browser** and propagates through the entire service chain (span-by-span breakdown with source links in [ANATOMY_OF_A_TRADE.md](ANATOMY_OF_A_TRADE.md)):
 
 ```
-Kong Gateway (HTTP span)
-  └─ kx-exchange (order validation)
-      └─ kx-exchange (wallet balance check)  
-      └─ kx-exchange (PostgreSQL query)
-          └─ RabbitMQ publish (order.created)
-              └─ kx-matcher (order matching)
-                  └─ RabbitMQ publish (payment.process)
-                      └─ payment-processor (settlement)
-                          └─ kx-wallet (balance update)
-                              └─ PostgreSQL commit
+kx-wallet (browser) — order.submit.client
+  └─ fetch POST (W3C traceparent leaves the browser)
+      └─ api-gateway — Kong HTTP span (when routed through the gateway)
+          └─ kx-exchange — POST /api/v1/orders (Express + middleware spans)
+              ├─ pg.query:* (balance checks, order INSERT — auto-instrumented)
+              ├─ publish orders (RabbitMQ producer span)
+              │   └─ kx-matcher — order.match (consumer, separate process)
+              │       └─ order.response (reply on payment_response queue)
+              ├─ pg.query:* (wallet settlement UPDATEs + order status, back in kx-exchange)
+              └─ zk.prove → zk.data.fetch / zk.witness.generate /
+                            zk.proof.generate / zk.proof.verify (fire-and-forget)
 ```
 
 A single trade typically generates **17+ spans** on the full RabbitMQ trade path (observed in demo traces), each with microsecond-precision timing. The **W3C Trace Context** standard (`traceparent` header) ensures lossless propagation through both HTTP and AMQP boundaries.
@@ -300,7 +318,7 @@ These insights are attached to the anomaly record and served to both the LLM ana
 
 ---
 
-## 6. AI-Powered Root-Cause Analysis
+## 6. AI-Powered Root-Cause Analysis [PUBLIC]
 
 ### 6.1 Architecture
 
@@ -329,15 +347,17 @@ Rather than using a generic analysis prompt, the **Stream Analyzer** classifies 
 
 | Priority | Use Case | Trigger Pattern |
 |----------|----------|----------------|
-| **P0** | Payment Gateway Down | Payment service, duration >5s, SEV ≥2 |
-| **P0** | Certificate Expired | TLS/SSL span, error tags present |
-| **P0** | DoS Attack | Rate limit span, SEV ≥2 |
-| **P0** | Auth Service Down | Auth service, duration >3s, SEV ≥2 |
-| **P1** | Cloud Provider Issue | 3+ services affected simultaneously |
-| **P1** | Queue Backlog | RabbitMQ operations, SEV ≥3 |
-| **P1** | Third Party Timeout | External service spans, >5s |
-| **P2** | Database Issue | PostgreSQL operations, SEV ≥3 |
-| **P2** | Generic Anomaly | Catch-all for unclassified patterns |
+| **P0** | Payment Gateway Down | Service name contains `payment` AND (HTTP status ≥500 OR error tag) |
+| **P0** | Certificate Expired | `error.message` contains "cert" or "ssl" |
+| **P0** | DoS Attack | Service name contains `gateway` AND HTTP status 429 |
+| **P0** | Auth Service Down | Service name contains `auth` AND HTTP status ≥500 |
+| **P1** | Cloud Provider Issue | Deviation >5σ AND duration >3× expected mean |
+| **P1** | Queue Backlog | Service name contains `matcher` or `order` |
+| **P1** | Third Party Timeout | Duration >10s AND operation contains "external" or "api" |
+| **P2** | Database Issue | Operation contains "query" or "db" |
+| **P2** | Performance Anomaly | Catch-all for unclassified patterns |
+
+*Source: `match()` predicates in `server/monitor/stream-analyzer.ts` (`USE_CASES`).*
 
 Each use case injects a **domain-specific prompt template** that guides the LLM toward the most relevant diagnosis, while the full trace context and correlated metrics provide factual grounding.
 
@@ -373,7 +393,7 @@ The LLM pipeline itself is instrumented with Prometheus metrics:
 | `kx_llm_events_by_severity_total` | Counter | Input volume by severity level |
 | `kx_llm_analysis_duration_seconds` | Histogram | LLM inference latency monitoring |
 | `kx_llm_queue_depth` | Gauge | Current pending analysis queue size |
-| `kx_llm_analysis_skipped_total` | Counter | Skipped analyses by reason (duplicate, queue full) |
+| `kx_llm_dropped_events_total` | Counter | Dropped analysis events by reason (`queue_full`, `llm_error`, `timeout`) |
 
 These metrics feed into the Grafana dashboard, enabling operators to monitor the health of the AI pipeline itself — a meta-observability layer.
 
@@ -383,11 +403,11 @@ The base Llama 3.2:1B model can be **continuously improved** using production da
 
 | Parameter | Value |
 |-----------|-------|
-| **Framework** | Axolotl + QLoRA (4-bit quantization) |
+| **Framework** | Axolotl LoRA (base model loaded in 8-bit — `axolotl-config.yaml`) |
 | **Base model** | Llama 3.2:1B |
 | **Adapter** | LoRA rank 16, alpha 32, dropout 0.05 |
 | **Training data** | Human-validated anomaly analyses (accept/reject + freeform corrections) |
-| **Data source** | `GET /api/v1/monitor/training-data` — exports validated analyses in Axolotl JSONL format |
+| **Data source** | `GET /api/v1/monitor/training/export` — exports validated analyses in Axolotl JSONL format |
 | **Human feedback** | Operators rate AI analyses via the dashboard; corrections become training samples |
 
 ```mermaid
@@ -398,12 +418,25 @@ flowchart LR
     D -->|Accept ✓| E[Training Store]
     D -->|Reject + Correct| E
     E --> F[Export JSONL]
-    F --> G[Axolotl QLoRA Training]
+    F --> G[Axolotl LoRA Training]
     G --> H[Deploy Fine-Tuned Adapter]
     H --> B
 ```
 
 This closed-loop architecture means the AI improves from real production incidents — not synthetic benchmarks — creating a **flywheel effect** where every resolved anomaly makes the next diagnosis faster and more accurate.
+
+### 6.6 Read-Only MCP Tool Surface
+
+Everything the human operator sees, an AI agent can query through the **Model Context Protocol**. Two servers ship in the repo:
+
+| Server | Location | Surface |
+|--------|----------|---------|
+| Embedded | `server/mcp/index.ts` | **28 tools** — traces, metrics, logs, zk proofs, anomalies, system health/topology, Bayesian train/infer — served in-process or over HTTP on port 3100 |
+| Standalone | `otel-mcp-server/` (v1.2.0, maintained as a subtree with its own package, tests, and changelog) | **32 tools across 7 skill plugins** (traces, metrics, logs, Elasticsearch, Alertmanager, zk-proofs, system), selectable per deployment via a `--tools` flag |
+
+The distinctive capability is that agents don't merely *retrieve* proofs — they **cryptographically verify** them. The `zk_proof_verify` tool calls `GET /api/public/zk/verify/:tradeId`, whose handler executes a real `snarkjs.groth16.verify()` against the committed verification key and returns the mathematical verdict. An agent investigating an incident can therefore *assert* trade integrity rather than assume it.
+
+Both surfaces are **read-only by design**. Mutating actions — placing orders, silencing alerts, changing configuration — are a **[NON-GOAL]** for the MCP layer: an agent may observe and verify everything, and change nothing.
 
 ---
 
@@ -441,7 +474,7 @@ Every security event is stored with full context: event type, severity, user ID,
 
 ### 7.2 Security Alert Rules
 
-Nine dedicated Prometheus alert rules monitor for attack patterns:
+Ten dedicated Prometheus alert rules monitor for attack patterns:
 
 | Alert | Expression | Severity |
 |-------|-----------|----------|
@@ -454,6 +487,7 @@ Nine dedicated Prometheus alert rules monitor for attack patterns:
 | TokenEnumerationAttack | >15 invalid tokens in 5 min | Critical |
 | HighSeveritySecurityEvents | >5 high/critical events in 10 min | Critical |
 | AuthenticationFailures | >10 auth failures/sec (rate) | Warning |
+| RateLimitExceeded | >1 rate-limited (HTTP 429) request/sec, sustained 5 min | Warning |
 
 ### 7.3 Audit Trail Compliance
 
@@ -556,7 +590,7 @@ The platform targets fast detection — including a 10-second anomaly detection 
 | Trace Profiler | 30 seconds | ~30s for new anomalies |
 | Prometheus Scrape | 15 seconds | ~15s for metric thresholds |
 | Amount Anomaly Detector | Event-driven | <1ms (inline with execution) |
-| Alertmanager Group Wait | 10s (critical) / 30s (warning) | +10–30s for notification |
+| Alertmanager Group Wait | 10s (critical) / 1m (warning) | +10s (critical) to +1m (warning) for notification |
 | **Effective MTTD** | — | **<60 seconds** for critical issues |
 
 ### 9.3 Minimizing MTTR (Mean Time to Resolve)
@@ -572,6 +606,15 @@ The AI-powered analysis pipeline shortens triage by automating the most time-con
 | **Resolution** | Variable + guided recommendations |
 
 The combination of automated detection, instant severity classification, AI-generated root-cause analysis, and tiered escalation shortens triage for most incident categories.
+
+### 9.4 Verification: Chaos as Falsification
+
+A detection claim that cannot be made to fail is not a claim. Every detection capability in this document is reproducible — and falsifiable — via the chaos scenarios documented in [CHAOS_INJECTION.md](CHAOS_INJECTION.md): API-key-gated latency and error injection lets anyone trigger the exact fault a detector claims to catch and watch whether it actually fires.
+
+Two design details keep the experiment honest:
+
+- **Baselines freeze during chaos.** The chaos controller calls `freezeBaselines()` on the trace profiler (`server/monitor/trace-profiler.ts`) when a scenario starts and unfreezes it on stop, so the anomaly detector keeps comparing against pre-chaos normals — injected faults can never contaminate the learned baselines they are supposed to violate.
+- **Trace propagation is proven by test, not asserted.** The end-to-end suite (`scripts/e2e-test.js`) mints a random 128-bit trace ID client-side, sends it through Kong as a `traceparent` header, and asserts that the *exact same ID* appears in Jaeger with spans across multiple services. This job runs in CI as a manually triggered `workflow_dispatch` workflow (it needs the full running stack), not on every pull request — a deliberate scope statement, not a per-commit guarantee.
 
 ---
 
@@ -591,7 +634,7 @@ The Activity feed implements a **Verified-Only** display policy: trades are only
 
 ---
 
-## 11. Cryptographic Trade Verification (zk-SNARKs)
+## 11. Cryptographic Trade Verification (zk-SNARKs) [PUBLIC]
 
 Krystaline goes beyond observability into **cryptographic verification** — generating zero-knowledge proofs that mathematically guarantee trade integrity without revealing private inputs.
 
@@ -667,6 +710,21 @@ The proof generation pipeline is itself fully instrumented with OpenTelemetry sp
 
 This means **the cryptographic layer itself is observable** — proving time, verification success rate, and proof pipeline health are all tracked, alerted on, and dashboarded.
 
+### 11.5 Measured Performance
+
+| Circuit | Wires | Proving key size | Warm proving | Verify | Proof size |
+|---------|-------|------------------|--------------|--------|------------|
+| `trade_integrity` | 977 | 425,302 B | 129–152 ms | 12–20 ms | 724 B (serialized JSON) |
+| `solvency` | 1,256 | 578,660 B | — | — | — |
+
+*Benchmark run 2026-07-05 against the committed artifacts in `server/circuits/build/`; wire counts read from the zkey headers. Proving/verify timings are for the trade-integrity circuit (6 warm runs on a development machine); the solvency circuit was not separately timed.*
+
+Three properties of this pipeline are deliberately stated at their actual strength, not above it:
+
+- **Proofs are session-cached, in memory.** Generated proofs live in an in-process cache keyed by trade ID; they are not persisted to durable storage.
+- **Verification is server-side, with independently verifiable payloads.** `GET /api/public/zk/verify/:tradeId` runs `groth16.verify()` on the server, and `GET /api/public/zk/proof/:tradeId` returns the proof, public signals, *and the verification key* — so any third party can re-run the verification with stock snarkjs and no trust in the server.
+- **The trusted setup is dev-grade and single-party.** The committed proving keys were generated without a multi-party ceremony. No ceremony claims are made: securing real value would require a proper MPC trusted setup before deployment.
+
 ---
 
 ## 12. Infrastructure & Deployment
@@ -677,13 +735,16 @@ The platform runs as a Docker Compose stack with 22 services in docker-compose.y
 
 | Category | Services | Count |
 |----------|----------|-------|
-| Core Application | API Gateway (Kong), Node.js services (×3) | 4 |
+| API Gateway | Kong Gateway, Kong PostgreSQL, Kong migrations (one-shot job) | 3 |
 | Message Queue | RabbitMQ (with Prometheus plugin) | 1 |
-| Databases | PostgreSQL ×3 (App, Kong, GoAlert) | 3 |
-| Observability | Jaeger, Prometheus, Loki, Promtail, Grafana, OTEL Collector | 6 |
-| Alerting | Alertmanager, GoAlert | 2 |
-| AI | Ollama | 1 |
-| Utilities | MailDev (dev SMTP), Node Exporter, PG Exporter ×2 | 3 |
+| Databases & Cache | App PostgreSQL, Redis | 2 |
+| Observability | Jaeger, OTEL Collector, Prometheus, Loki, Promtail, Grafana | 6 |
+| Alerting | Alertmanager, GoAlert, GoAlert PostgreSQL | 3 |
+| AI | Ollama, Bayesian service (FastAPI) | 2 |
+| Exporters | Node Exporter, PG Exporter ×2 (app + Kong), Redis Exporter | 4 |
+| Utilities | MailDev (dev SMTP) | 1 |
+
+The three Node.js processes — the `kx-exchange` API, the `kx-matcher` order matcher, and the Vite frontend — are **not** containers: they run natively on the host, started by `npm run dev` (docker-compose.yml notes this explicitly).
 
 ### 12.2 Kubernetes Readiness
 
@@ -696,8 +757,26 @@ The platform includes a complete **Helm chart** and Kubernetes manifests for pro
 
 ---
 
+## 13. Related Work — What's Different
 
+**Versus Merkle-tree proof-of-reserves.** Exchange proof-of-reserves schemes publish point-in-time attestations — a Merkle root of balances, audited quarterly or on demand. Krystaline's solvency commitment is regenerated **every 60 seconds** from live wallet data, and it is paired with something reserve schemes do not have: a **per-trade integrity circuit** that commits the OTel `traceId` into the Poseidon hash, while the proving pipeline emits its own spans inside that same trace. The proof commits to the trace, and the trace records the proof — attestation and telemetry are cryptographically interlocked rather than parallel artifacts.
 
+**Versus the OpenTelemetry community demo.** The OpenTelemetry demo application is an excellent instrumentation reference — a telemetry showcase, and deliberately nothing more. It makes no financial-integrity claims about the data flowing through it. Krystaline treats the trace as evidence: trades only display if a trace exists, and the trace ID is bound into a zk-SNARK.
+
+**Versus SaaS AIOps platforms.** Commercial AIOps products ship telemetry to cloud-hosted LLMs and rank incidents with closed detection logic. Krystaline is **local-first** (Ollama on-premises, no telemetry leaves the boundary), its detection logic is **inspectable** (every claim above cites the implementing file), and paging is **deterministic** — 48 Prometheus rules through Alertmanager to GoAlert — with the LLM confined to an advisory role.
+
+---
+
+## 14. References
+
+- Welford, B. P. (1962). "Note on a Method for Calculating Corrected Sums of Squares and Products." *Technometrics*, 4(3).
+- Groth, J. (2016). "On the Size of Pairing-Based Non-Interactive Arguments." *Advances in Cryptology — EUROCRYPT 2016*.
+- Grassi, L., Khovratovich, D., Rechberger, C., Roy, A., & Schofnegger, M. (2021). "Poseidon: A New Hash Function for Zero-Knowledge Proof Systems." *30th USENIX Security Symposium*.
+- W3C. *Trace Context*. W3C Recommendation.
+- Hu, E. J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., & Chen, W. (2021). "LoRA: Low-Rank Adaptation of Large Language Models." arXiv:2106.09685.
+- OpenTelemetry. *Semantic Conventions for Generative AI Systems*. OpenTelemetry Specification.
+
+---
 
 ## Appendix A: Alert Rules Summary
 
@@ -722,14 +801,14 @@ The platform includes a complete **Helm chart** and Kubernetes manifests for pro
 |--------|------|--------|
 | `http_requests_total` | Counter | Application |
 | `http_request_duration_seconds` | Histogram | Application |
-| `orders_failed_total` | Counter | Trading Engine |
+| `orders_processed_total` (labels: `status`, `side`) | Counter | Trading Engine |
 | `price_feed_last_update_timestamp` | Gauge | Price Service |
 | `kx_security_events_total` | Counter | Security Service |
 | `kx_llm_analysis_total` | Counter | Stream Analyzer |
 | `kx_llm_analysis_duration_seconds` | Histogram | Stream Analyzer |
 | `kx_llm_queue_depth` | Gauge | Stream Analyzer |
 | `kx_llm_events_by_severity_total` | Counter | Stream Analyzer |
-| `kx_llm_analysis_skipped_total` | Counter | Stream Analyzer |
+| `kx_llm_dropped_events_total` | Counter | Stream Analyzer |
 | `pg_up` | Gauge | PostgreSQL Exporter |
 | `pg_stat_activity_count` | Gauge | PostgreSQL Exporter |
 | `node_cpu_seconds_total` | Counter | Node Exporter |
@@ -739,4 +818,4 @@ The platform includes a complete **Helm chart** and Kubernetes manifests for pro
 
 ---
 
-*Krystaline Observability Demo Platform — Technical Architecture Whitepaper v2.0. Apache-2.0 Licensed.*
+*Krystaline Observability Demo Platform — Technical Architecture Whitepaper v2.1. Apache-2.0 Licensed.*

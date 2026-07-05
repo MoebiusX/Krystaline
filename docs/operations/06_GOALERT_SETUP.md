@@ -41,15 +41,19 @@ Quick-start guide for configuring incident management and phone notifications.
 4. Copy the key (looks like: `abc123def456...`)
 
 ### Step 5: Connect Alertmanager
-Create the token file:
-```bash
-echo "YOUR_INTEGRATION_KEY" > config/alertmanager/goalert-token
+Put the integration key into the GoAlert webhook URLs in `config/alertmanager.yml` — each receiver embeds its key as a `token=` query parameter:
+```yaml
+- name: 'goalert-webhook'
+  webhook_configs:
+    - url: 'http://goalert:8081/api/v2/prometheusalertmanager/incoming?token=YOUR_INTEGRATION_KEY'
 ```
 
-Restart alertmanager to pick up the token:
+Restart alertmanager to pick up the change:
 ```bash
 docker-compose restart alertmanager
 ```
+
+> Note: docker-compose.yml also mounts `config/alertmanager/goalert-token` into the Alertmanager container, but the current `config/alertmanager.yml` does not read that file — the `token=` parameters in the webhook URLs are what connect the two.
 
 ## 📱 Phone Notifications (Twilio)
 
@@ -81,9 +85,9 @@ Alerts from Prometheus rules will automatically route through Alertmanager → G
 
 | File | Purpose |
 |------|---------|
-| `config/alertmanager.yml` | Routes critical alerts to GoAlert webhook |
-| `config/alertmanager/goalert-token` | Integration key (create this) |
-| `docker-compose.yml` | GoAlert + PostgreSQL services |
+| `config/alertmanager.yml` | Routes alerts to GoAlert webhooks (integration keys embedded as `token=` params) |
+| `config/alertmanager/goalert-token` | Mounted into the container but not read by the current config |
+| `docker-compose.yml` | GoAlert v0.33.0 (port 8081) + its own PostgreSQL |
 
 ## 🔗 Integration Flow
 
@@ -95,9 +99,13 @@ Prometheus → Alertmanager → GoAlert → Phone/SMS/Email
 
 ## 🚨 Alert Routing (Current Config)
 
-- **Critical alerts** → GoAlert + Email
-- **Warning alerts** → GoAlert only
-- **Security alerts** → GoAlert (high priority)
+Per `config/alertmanager.yml`:
+
+- **Critical alerts** → GoAlert + email + ntfy.sh mobile push (`priority=urgent`)
+- **Warning alerts** → GoAlert, batched (1m group wait, 4h repeat)
+- **Security alerts** (`service: security`) → GoAlert Generic API, immediate
+- **PriceFeedUnavailable** → auto-remediation webhook on the API first, then continues to GoAlert
+- **NoTraffic** → self-healing traffic ping, then continues to GoAlert
 
 ---
 
