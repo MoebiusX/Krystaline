@@ -712,7 +712,7 @@ export function TransparencyDashboard() {
               {zkStats?.solvency.lastGeneratedAt && (
                 <div className="mt-4 flex items-center justify-center gap-2 text-xs text-cyan-100/40">
                   <Shield className="h-3.5 w-3.5 text-purple-400" />
-                  <span>Solvency proof: verified {zkStats.solvencyProofAge}s ago</span>
+                  <span>Reserve commitment published {zkStats.solvencyProofAge}s ago</span>
                   <span className="text-purple-400/60">•</span>
                   <span className="font-mono text-purple-400/60">{zkStats.solvency.totalReserveCommitment?.slice(0, 12)}...</span>
                 </div>
