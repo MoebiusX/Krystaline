@@ -61,6 +61,33 @@ Avoid:
 - Claims that private Core functionality is fully present in the public repo.
 - Claims about customer-funds production readiness unless separately approved.
 
+## Showcase Messaging
+
+### What To Showcase Now
+
+Lead with capabilities that are demonstrable in the public lab today, each paired with its core message:
+
+| Showcase | Message |
+|---|---|
+| OpenTelemetry trade path | "Every important operation should leave a reconstructable telemetry trail." |
+| AI SRE thesis | "The model explains verified telemetry; it does not invent operational reality." |
+| Service-manager control | "The target user is also the owner who needs impact, evidence, and next action." |
+| GenAI dashboard pack | "The AI path is itself observable and governed." |
+| Crypto and DeFi fit | "Latency, traces, proofs, solvency, and transparency all become trust signals." |
+| Deterministic paging | "AI assists triage; Alertmanager and GoAlert remain the escalation backbone." |
+
+### Precise Language
+
+Use precise language:
+
+| Do say | Avoid saying |
+|---|---|
+| "The public lab demonstrates the observability-first architecture." | "All private Core capabilities are fully published here." |
+| "AI produces evidence-backed hypotheses." | "AI determines root cause with certainty." |
+| "Paging remains deterministic." | "AI replaces on-call." |
+| "Approved actions are a governed future phase." | "The AI can safely mutate production by itself." |
+| "External provider routing is a controlled deployment option." | "Customer BYOK is shipped." |
+
 ## Migration Policy
 
 This rebrand is intentionally two-speed:
