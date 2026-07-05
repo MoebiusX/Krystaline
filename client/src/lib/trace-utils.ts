@@ -32,3 +32,17 @@ export function isValidJaegerTraceId(traceId: string): boolean {
     const formatted = formatTraceIdForJaeger(traceId);
     return /^[0-9a-f]{32}$/i.test(formatted);
 }
+
+/**
+ * Redact a directly-identifying value (e.g. a wallet address) before it is
+ * written to a span attribute. Span attributes are exported to the trace
+ * backend, so a full identifier there is effectively published. Keep a short
+ * head/tail for debuggability; fully mask anything too short to redact
+ * meaningfully.
+ */
+export function redactAddressForTelemetry(address: string | null | undefined): string {
+    if (!address) return '';
+    const a = String(address);
+    if (a.length <= 12) return '[redacted]';
+    return `${a.slice(0, 6)}...${a.slice(-4)}`;
+}

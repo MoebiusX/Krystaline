@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { trace, context, SpanStatusCode } from "@opentelemetry/api";
 import { createLogger } from "@/lib/logger";
+import { redactAddressForTelemetry } from "@/lib/trace-utils";
 
 const log = createLogger('TransferForm');
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,9 @@ export function TransferForm() {
                 const parentContext = context.active();
 
                 try {
-                    parentSpan.setAttribute('transfer.toAddress', data.toAddress);
+                    // Redact the destination address before it reaches the trace
+                    // backend — a full wallet address is directly-identifying PII.
+                    parentSpan.setAttribute('transfer.toAddress', redactAddressForTelemetry(data.toAddress));
                     parentSpan.setAttribute('transfer.amount', data.amount);
                     parentSpan.setAttribute('transfer.asset', data.asset);
 
