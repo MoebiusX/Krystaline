@@ -13,6 +13,7 @@ import { getErrorMessage, InsufficientFundsError, OrderError } from "../lib/erro
 import db from "../db";
 import authRoutes from "./auth-routes";
 import twoFactorRoutes from "./2fa-routes";
+import { authenticate } from "../auth/routes";
 import { validateUUID } from "../middleware/uuid-validation";
 import { tradingHealthCheck } from "../middleware/health-check";
 import { priceService } from '../services/price-service';
@@ -20,6 +21,17 @@ import { binanceFeed } from '../services/binance-feed';
 import { priceFeedManager } from '../services/price-feed-manager';
 
 const logger = createLogger('api-routes');
+
+// Accounts selectable as transfer recipients. Defaults to the demo seed
+// accounts; override with a comma-separated TRANSFER_RECIPIENTS env var. The
+// /api/v1/users lookup uses this so it never enumerates the whole user base.
+const TRANSFER_RECIPIENT_ALLOWLIST = (
+  process.env.TRANSFER_RECIPIENTS ||
+  'seed.user.primary@krystaline.io,seed.user.secondary@krystaline.io'
+)
+  .split(',')
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
 
 export function registerRoutes(app: Express) {
   logger.info('Registering API routes');
@@ -71,17 +83,30 @@ export function registerRoutes(app: Express) {
 
   // ============================================
 
-  // Get all verified users (for transfers)
-  app.get("/api/v1/users", async (req: Request, res: Response) => {
+  // Resolve transfer recipients. Requires authentication and never returns the
+  // full verified-user directory: an exact ?email= match returns that single
+  // user, and with no email we return only the configured recipient allow-list.
+  app.get("/api/v1/users", authenticate, async (req: Request, res: Response) => {
     try {
-      // Get real users from database with their wallet addresses
-      const result = await db.query(
-        `SELECT u.id, u.email, u.status, w.address as wallet_address
-         FROM users u
-         LEFT JOIN wallets w ON u.id = w.user_id AND w.asset = 'BTC'
-         WHERE u.status = 'verified'
-         ORDER BY u.created_at DESC LIMIT 50`
-      );
+      const email = String(req.query.email || '').trim().toLowerCase();
+
+      const result = email
+        ? await db.query(
+            `SELECT u.id, u.email, w.address as wallet_address
+             FROM users u
+             LEFT JOIN wallets w ON u.id = w.user_id AND w.asset = 'BTC'
+             WHERE u.status = 'verified' AND lower(u.email) = $1
+             LIMIT 1`,
+            [email]
+          )
+        : await db.query(
+            `SELECT u.id, u.email, w.address as wallet_address
+             FROM users u
+             LEFT JOIN wallets w ON u.id = w.user_id AND w.asset = 'BTC'
+             WHERE u.status = 'verified' AND lower(u.email) = ANY($1)
+             ORDER BY u.created_at DESC LIMIT 50`,
+            [TRANSFER_RECIPIENT_ALLOWLIST]
+          );
 
       // Map to expected format for transfer form
       const users = result.rows.map(user => ({
