@@ -39,6 +39,8 @@ naming policy.
 | [Getting Started](docs/GETTING_STARTED.md) | Local setup, repo map, and useful commands. |
 | [Architecture](docs/architecture/01_ARCHITECTURE.md) | System design, data flow, and service interactions. |
 | [Public Documentation Catalog](docs/PUBLIC_DOCUMENTS.md) | Public-safe document map and disclosure boundaries. |
+| [Secure Operational Transparency](docs/SECURE_OPERATIONAL_TRANSPARENCY.md) | Defensive principles for exposing public data while protecting accounts, money, and secrets. |
+| [Security Hardening Changelog](docs/SECURITY_HARDENING_CHANGELOG.md) | Our hardening philosophy and a public-safe summary of what we harden. |
 
 ## Status Legend
 
