@@ -1,3 +1,5 @@
+> **Archived 2026-07-05:** describes the pre-rename payment-PoC era. See [../architecture/01_ARCHITECTURE.md](../architecture/01_ARCHITECTURE.md) for the current architecture.
+
 # Krystaline Observability Lab Repository Summary
 
 ## Purpose

@@ -1,5 +1,5 @@
 # Krystaline Technical Assessment
-> **Generated:** 2026-02-06  
+> **Generated:** 2026-07-05 — re-verified against code  
 > **Assessment Method:** Static review + prior test results (tests not rerun this pass)  
 > **Status:** ⚠️ Partially verified (see testing section)
 
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-Krystaline is a **demo-ready crypto exchange platform** with exceptional observability, security, and monitoring capabilities. The backend demonstrates professional-grade engineering with extensive test coverage (1,100+ passing automated tests: 1,088 in the main suite + 99 in otel-mcp-server), proper security middleware, and a sophisticated anomaly detection system. The frontend requires polish for production but is sufficient for investor demos.
+Krystaline is a **demo-ready crypto exchange platform** whose observability and security posture is measurable rather than claimed: 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server), 48 alert rules across 11 groups, a unified dashboard with 73 panels / 79 query targets, three-tier rate limiting (300/60/15 req/min), and a statistical anomaly detection pipeline with a 3.0σ–8.0σ severity ladder ([server/monitor/anomaly-detector.ts](../../server/monitor/anomaly-detector.ts)). The frontend requires polish for production but is sufficient for investor demos.
 
 ### Overall Health Score: **83/100**
 
@@ -148,16 +148,20 @@ Helmet configured with:
 server/
 ├── api/          # Route handlers (health, public, routes)
 ├── auth/         # Authentication service & routes
+├── circuits/     # Circom ZK circuits (solvency, trade_integrity) + compiled build artifacts
 ├── config/       # Centralized Zod-validated config
 ├── core/         # Core services (order, payment)
 ├── db/           # PostgreSQL connection & storage
 ├── lib/          # Utilities (errors, logger)
+├── mcp/          # Embedded MCP server (28 telemetry tools over stdio/HTTP)
 ├── metrics/      # Prometheus instrumentation
 ├── middleware/   # Security, error handling, request logging
-├── monitor/      # Anomaly detection, baseline calc, streaming
-├── services/     # External integrations (Kong, RabbitMQ, Binance)
+├── monitor/      # Anomaly detection pipeline (20 modules, see Observability Assessment)
+├── services/     # External integrations (Kong, RabbitMQ, Binance) + ZK proof service
 ├── trade/        # Trading service & routes
 └── wallet/       # Wallet service & routes
+
+otel-mcp-server/  # Standalone, separately-tested MCP server package (99 tests)
 ```
 
 ### ✅ Health Endpoints (IMPLEMENTED)
@@ -215,19 +219,26 @@ server/
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
-| `anomaly-detector.ts` | Statistical anomaly detection | ✅ |
+| `anomaly-detector.ts` | Z-score detection on span durations, 3.0σ (SEV5) → 8.0σ (SEV1), MIN_SAMPLES=10 | ✅ |
 | `baseline-calculator.ts` | Time-based baseline computation | ✅ |
-| `stream-analyzer.ts` | Real-time trace analysis | ✅ |
+| `stream-analyzer.ts` | Batches anomalies (max 10 per batch / 30s window, queue cap 100) into streamed Ollama analysis; 9 tiered use-case prompts; exports 5 `kx_llm_*` Prometheus self-metrics | ✅ |
 | `trace-profiler.ts` | Span performance profiling | ✅ |
 | `metrics-correlator.ts` | Cross-signal correlation | ✅ |
-| `history-store.ts` | Persistent anomaly history | ✅ |
+| `history-store.ts` | PostgreSQL-backed baseline/anomaly persistence (survives restart; analyses cached in memory, last 1,000) | ✅ |
+| `context-enricher.ts` + `analysis-service.ts` | Trace-centric RCA: from a traceId, parallel-fetches spans, Loki logs (±5 min), Prometheus metrics at trace time, firing alerts, SLO budgets, topology blast radius (BFS), and ZK health into a single LLM prompt | ✅ |
+| `amount-profiler.ts` + `amount-anomaly-detector.ts` | Whale/amount detection: Welford incremental baselines per operation×asset, 3σ–7σ ladder, MIN_SAMPLES=20 | ✅ |
+| `alertmanager-notifier.ts` + `auto-remediation.ts` | SEV1–3 anomalies posted to Alertmanager v2 (annotations enriched with LLM analysis, auto-resolved after 5 min); webhook-driven remediation limited to 4 registered safe actions, gated by `AUTO_REMEDIATION_ENABLED`, with audit history endpoint | ✅ |
+| `training-store.ts` + `model-config.ts` | Good/bad rating capture with corrections, JSONL export feeding LoRA fine-tuning (r=16/α=32); runtime Ollama model switching without restart | ✅ |
+| `chaos-controller.ts` | 5 injectable failure scenarios (latency spike, error burst, slow degradation, intermittent errors, cascade); refuses to run without `CHAOS_API_KEY` | ✅ |
+| `topology-service.ts` + `ws-server.ts` | Jaeger dependency graph cached on a 5-min poll with blast-radius BFS; WebSocket fan-out of anomalies and streamed analysis chunks | ✅ |
 
-Features:
-- 5-level severity classification (SEV1-SEV5)
-- Adaptive baselines with time-of-day awareness
-- LLM-powered root cause analysis (Ollama)
-- WebSocket streaming for real-time alerts
+Features (each verifiable in the files above):
+- 5-level severity classification (SEV1-SEV5), thresholds adaptive per baseline
+- Adaptive baselines with time-of-day awareness (day-of-week × hour-of-day buckets, 168 possible per operation)
+- LLM-powered root cause analysis (Ollama), streamed over WebSocket
 - Prometheus metric correlation
+
+Known limits: `training-store.ts` persists to a local JSON file (not the database); `auto-remediation.ts` keeps its audit log in memory only; two of the four remediation actions are log-and-escalate rather than corrective. [monitor/routes.ts](../../server/monitor/routes.ts) registers 40 HTTP/WS endpoints — the Monitor Routes table below lists only the core 6.
 
 ### ✅ Structured Logging
 **Location:** [server/lib/logger.ts](../../server/lib/logger.ts)
@@ -241,6 +252,55 @@ Features:
 - Resource attributes standardized: `service.name`, `deployment.environment`, `service.version`, `service.instance.id`
 - Metrics-traces linking via exemplars; outbound DB/RabbitMQ/HTTP spans enriched with semantic attrs
 - Logging alignment: add trace/Span IDs to logs and ship via OTLP
+
+---
+
+## ZK Proof Assessment
+
+### ✅ Groth16 Proof Service
+**Location:** [server/services/zk-proof-service.ts](../../server/services/zk-proof-service.ts) (528 lines) + [server/circuits/](../../server/circuits/)
+
+| Component | What it does | Status |
+|-----------|--------------|--------|
+| `trade_integrity.circom` (63 lines) | Proves a fill executed within a stated price band (±0.5% of the Binance reference) without revealing fill price, quantity, or trader; commits `Poseidon(fillPrice, quantity, userId, timestamp, traceId)` so the OTel trace ID is cryptographically bound to the trade | ✅ |
+| `solvency.circom` (59 lines) | Proves `SUM(balances) == claimedTotal ≥ threshold` over N=8 private balances with a Poseidon reserve commitment | ✅ |
+| `zk-proof-service.ts` | Real `snarkjs.groth16.fullProve`/`verify` against compiled artifacts in `circuits/build/` (`.zkey` + verification keys present in repo); solvency proof regenerated every 60s; each proof emits OTel spans (`zk.prove` → `zk.data.fetch` → `zk.witness.generate` → `zk.proof.generate` → `zk.proof.verify`) | ✅ |
+
+Design properties verified in code:
+- Proof generation is non-blocking by contract — a failed proof never affects the trade itself
+- Server-side verification runs after every proof generation; stats endpoint reports success rate and per-circuit average proving time
+- Falls back to a logged mock mode when circuit artifacts are absent (test environments)
+
+Known limits: the trade-proof cache is an in-memory `Map` (proofs lost on restart); the solvency threshold is hard-coded to 0 (proves reserves exist, not reserves ≥ liabilities); solvency covers the top 8 USD wallets per the circuit's fixed N=8.
+
+---
+
+## MCP / AI Agent Access Assessment
+
+Two MCP servers expose the platform's telemetry to AI agents — one embedded, one standalone.
+
+### ✅ Embedded MCP Server
+**Location:** [server/mcp/index.ts](../../server/mcp/index.ts) (737 lines)
+
+| Aspect | Detail | Status |
+|--------|--------|--------|
+| Tools | 28 tools + 1 platform-overview resource: traces (5), metrics (6), logs (4), ZK proofs (4), anomalies/system health (4), Bayesian RCA (5) | ✅ |
+| Transports | stdio (default) and streamable HTTP with `/health` endpoint | ✅ |
+| Backends | Jaeger, Prometheus, Loki, the app's own monitor/ZK APIs, and the Bayesian inference service | ✅ |
+| Auth | None in HTTP mode — acceptable for local demo, not for exposure | ⚠️ |
+
+### ✅ Standalone otel-mcp-server
+**Location:** [otel-mcp-server/](../../otel-mcp-server/) (v1.2.0, separate package with its own test suite and Dockerfile)
+
+| Aspect | Detail | Status |
+|--------|--------|--------|
+| Tools | 32 tools across 7 skill plugins: traces (5), metrics (6), logs (4), Elasticsearch (5), Alertmanager (4), ZK proofs (4), system (4) | ✅ |
+| Tests | 99 passing tests across 7 test files (counted in `tests/`) | ✅ |
+| Architecture | Skill plugin registry ([src/skills.ts](../../otel-mcp-server/src/skills.ts)) — one file per backend, selectable via `--tools traces,metrics,logs` | ✅ |
+| Auth | Two layers: per-backend credentials plus client API keys (env var, mounted file, or local file); session-based streamable HTTP with per-session server instances | ✅ |
+| Self-observability | `/metrics` endpoint exports tool-call counts, backend latencies, and auth attempts | ✅ |
+
+The embedded server predates the standalone one and overlaps with it (traces/metrics/logs/ZK tools exist in both). Consolidating on the standalone package would remove ~700 lines of duplication and close the embedded server's unauthenticated-HTTP gap.
 
 ---
 
@@ -428,13 +488,13 @@ Features:
 
 ## Conclusion
 
-Krystaline has a **rock-solid backend** with exceptional observability—the core value proposition is fully realized. However, the frontend needs UI/UX polish before it can be called production-ready.
+Krystaline's backend claims are checkable against the repo: 1,100+ passing automated tests, 48 alert rules in 11 groups, a unified dashboard with 73 panels / 79 query targets, and a 22-service compose stack. However, the frontend needs UI/UX polish before it can be called production-ready.
 
 ### Strengths
-1. **Production-grade security** - Rate limiting, helmet, bcrypt, JWT
-2. **Comprehensive testing** - 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server) with isolated mocking
-3. **Best-in-class observability** - Full OTEL stack with LLM analysis
-4. **Clean architecture** - Clear separation of concerns
+1. **Layered security** - Three-tier rate limiting (300/60/15 req/min), Helmet CSP, bcrypt cost 12, JWT + hashed refresh tokens
+2. **Test coverage** - 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server) with isolated mocking
+3. **Observability with evidence** - Full OTEL stack (traces/metrics/logs), 48 alert rules / 11 groups, statistical + LLM anomaly analysis, typically 17+ spans on the full RabbitMQ trade path (observed in demo traces)
+4. **Verifiability** - Real Groth16 proofs (trade integrity + solvency) and two MCP servers (28 + 32 tools) that let any agent audit the telemetry
 5. **Real market data** - Binance WebSocket integration
 
 ### Weaknesses
@@ -443,25 +503,9 @@ Krystaline has a **rock-solid backend** with exceptional observability—the cor
 3. **Empty states** - Landing page shows zeros on fresh install
 4. **Demo flow** - Trace links not emphasized enough
 
-### Investor Demo Readiness: ⚠️ READY WITH CAVEATS
+### Investor Demo Readiness
 
-**Can demonstrate:**
-- Core user journey (register → verify → trade)
-- Real-time Binance prices
-- 17-span distributed traces in Jaeger
-- LLM-powered anomaly analysis
-- System transparency dashboard
-
-**Should avoid dwelling on:**
-- Landing page metrics (show after trades)
-- Visual inconsistencies (keep moving)
-- Empty states (pre-seed data recommended)
-
-**Recommended prep:**
-1. Run through [DEMO-WALKTHROUGH.md](../product/03_DEMO_WALKTHROUGH.md)
-2. Pre-seed demo trades
-3. Practice the Jaeger reveal moment
-4. Have fallback talking points ready
+See [docs/product/04_INVESTOR_DEMO_SCRIPT.md](../product/04_INVESTOR_DEMO_SCRIPT.md) — demo preparation and script live in the product docs.
 
 ---
 
