@@ -2,6 +2,8 @@
 
 *How to monitor GenAI systems, run AI-assisted incident response, and keep human authority intact.*
 
+*Carlos Montero · Krystaline Observability Lab · July 2026*
+
 Most AI Ops demos still start in the wrong place.
 
 They put a chatbot next to a dashboard. An alert fires. Someone asks, "What happened?" The model writes a plausible incident summary. It looks useful for thirty seconds.
@@ -333,6 +335,43 @@ In 2026, AI Ops is not about replacing SREs. It is about making operational unde
 The model is not the monitor.
 
 The monitored system includes the model.
+
+## Reproduce this
+
+An article about falsifiable AI hypotheses should itself be falsifiable. Everything in the practical case above runs from one public repository — [MoebiusX/Krystaline](https://github.com/MoebiusX/Krystaline) — so the strongest way to read this piece is to try to break it on your laptop.
+
+Start the stack (Docker Desktop must be running; `npm run dev` composes the infrastructure itself):
+
+```bash
+git clone https://github.com/MoebiusX/Krystaline.git && cd Krystaline
+npm install --legacy-peer-deps
+npm run dev
+```
+
+Give the detector something to learn from first — baselines need a minimum of 10 samples per span before anything is judged abnormal:
+
+```bash
+node scripts/load-test.js --profile smoke
+```
+
+Then inject a real failure. These commands are quoted from the repo's [chaos-injection guide](../CHAOS_INJECTION.md); set `CHAOS_API_KEY` first, because without it every chaos endpoint returns `403`:
+
+```bash
+node scripts/chaos-scenarios.js latency-spike
+node scripts/chaos-scenarios.js cascade-failure --duration 180
+node scripts/chaos-scenarios.js --stop
+```
+
+With the monitor open at `http://localhost:5173/monitor` and Jaeger at `http://localhost:16686`, the control loop from this article should play out in front of you as an observable sequence:
+
+1. **Latency spike** — injected delay appears in the latency graphs and in Jaeger trace waterfalls.
+2. **Anomaly severity** — the detector flags spans against learned baselines on its 3.0σ–8.0σ severity ladder and raises SEV events.
+3. **Alert firing** — Prometheus rules (`HighLatencyP99`, then `HighErrorRate` as the cascade escalates) fire through Alertmanager.
+4. **LLM analysis streaming** — SEV 1–3 anomalies are batched to the local Ollama model and the root-cause commentary streams into the monitor over WebSocket.
+
+For `cascade-failure` the chaos guide publishes the expected timeline: wallet latency visible by ~30 s, the latency warning and anomaly detection by ~60–90 s, error alerts and SLO budget burn by ~120–150 s, LLM analysis streaming by ~150–180 s.
+
+Each step is a claim you can refute. If baselines never form, if severities never rise, if no alert fires, if no analysis streams — then this article overclaimed, and you will have the telemetry to prove it. That is the standard the piece argues for, applied to itself.
 
 ## Appendix: How the public projects relate
 

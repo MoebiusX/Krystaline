@@ -49,7 +49,7 @@
 |----------|---------|------|---------|------------------|
 | `crypto_exchange` | app-database | 5433 | Users, wallets, orders, trades | **CRITICAL** |
 | `kong` | kong-database | 5432 | API Gateway config, routes | HIGH |
-| `goalert` | goalert-db | 5434 | Incident management | MEDIUM |
+| `goalert` | goalert-db | — (container-only, no host port) | Incident management | MEDIUM |
 
 ### Schema Overview (crypto_exchange)
 
@@ -158,8 +158,10 @@ az storage blob upload --account-name youraccount --container-name backups `
 > ⚠️ **WARNING:** This will overwrite all existing data!
 
 ```powershell
-# Stop application services first
-docker-compose stop server payment-processor
+# Stop the host-run application processes first — the API and matcher are NOT
+# compose services (see 01_DEPLOYMENT_DOCKER.md Section 1). Stop `npm run dev`
+# (Ctrl+C in its terminal), or kill the tsx server/index.ts and
+# payment-processor/index.ts processes.
 
 # Drop and recreate database
 docker exec -it app-database psql -U exchange -c "DROP DATABASE IF EXISTS crypto_exchange;"
@@ -169,8 +171,9 @@ docker exec -it app-database psql -U exchange -c "CREATE DATABASE crypto_exchang
 docker cp "./backups/crypto_exchange-YYYYMMDD-HHMMSS.dump" app-database:/tmp/backup.dump
 docker exec app-database pg_restore -U exchange -d crypto_exchange -c /tmp/backup.dump
 
-# Restart services
-docker-compose start server payment-processor
+# Restart the application processes
+npm run dev
+# (or individually: npm run dev:server and npx tsx payment-processor/index.ts)
 
 # Verify restoration
 docker exec app-database psql -U exchange -d crypto_exchange -c "SELECT COUNT(*) FROM users;"
@@ -439,8 +442,9 @@ Invoke-RestMethod -Uri "http://localhost:5000/health" | ConvertTo-Json
 #### Step 6: Resume Operations
 
 ```powershell
-# Scale up services
-docker-compose up -d server payment-processor
+# Restart the host-run application processes (API + matcher)
+npm run dev
+# (or individually: npm run dev:server and npx tsx payment-processor/index.ts)
 
 # Or in Kubernetes
 kubectl -n krystalinex scale deployment kx-krystalinex-server --replicas=2
@@ -585,11 +589,11 @@ docker exec app-database pg_dump -U exchange -d crypto_exchange | gzip > ./backu
 │   docker cp app-database:/tmp/backup.dump ./backups/               │
 │                                                                    │
 │ RESTORE (Docker):                                                  │
-│   docker-compose stop server payment-processor                     │
+│   stop host-run Node processes (npm run dev / tsx)                 │
 │   docker cp ./backups/backup.dump app-database:/tmp/               │
 │   docker exec app-database pg_restore -U exchange                  │
 │     -d crypto_exchange -c /tmp/backup.dump                         │
-│   docker-compose start server payment-processor                    │
+│   restart processes: npm run dev                                   │
 │                                                                    │
 │ VERIFY:                                                            │
 │   docker exec app-database psql -U exchange -d crypto_exchange     │
@@ -597,7 +601,7 @@ docker exec app-database pg_dump -U exchange -d crypto_exchange | gzip > ./backu
 │                                                                    │
 │ EMERGENCY CONTACTS:                                                │
 │   GoAlert: http://localhost:8081                                   │
-│   On-Call: See RUNBOOK.md Section 10                               │
+│   On-Call: See 04_RUNBOOK.md Section 10                            │
 └────────────────────────────────────────────────────────────────────┘
 ```
 

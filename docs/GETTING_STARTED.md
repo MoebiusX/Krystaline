@@ -1,5 +1,7 @@
 # Getting Started with Krystaline
 
+> **The promise:** five minutes from `git clone` to a trade you can watch in Jaeger and verify cryptographically — the same path as the README's [See It in Five Minutes](../README.md#see-it-in-five-minutes).
+
 ## Prerequisites
 
 - **Node.js** 20+
@@ -16,7 +18,7 @@ npm run dev
 ```
 
 This launches:
-- **Docker infrastructure**: PostgreSQL, RabbitMQ, Jaeger, Prometheus, Grafana, Loki, Alertmanager, Kong, Redis, OTEL Collector, Ollama, MailDev
+- **Docker infrastructure**: PostgreSQL, RabbitMQ, Jaeger, Prometheus, Grafana, Loki, Alertmanager, Kong, Redis, OTEL Collector, Ollama, MailDev, GoAlert, exporters — 21 of the 22 compose services (the Bayesian service is the one exception: `docker compose up bayesian-service`)
 - **Node.js services**: Exchange API (port 5000), Payment Processor (matcher), React frontend (port 5173)
 
 Browse to → **http://localhost:5173**
@@ -27,6 +29,8 @@ Browse to → **http://localhost:5173**
 2. **Trade** — Buy 0.001 BTC → watch the live Binance price feed → click the Jaeger trace link in the toast
 3. **Observe** — Open [Jaeger](http://localhost:16686) to see 17+ spans across 4 services
 4. **Monitor** — Navigate to `/monitor` to see anomaly detection and AI diagnosis
+5. **Verify** — Fetch the Groth16 integrity proof for YOUR trade: `GET http://localhost:5000/api/public/zk/verify/:tradeId` (the `tradeId` is in the trade toast and on `/activity`). A real `snarkjs.groth16.verify()` runs server-side and returns the mathematical verdict.
+6. **Ask** — Point an MCP client (Claude Desktop, Copilot) at [`otel-mcp-server/`](../otel-mcp-server/README.md) — or run the embedded server with `npm run mcp` — and ask it about your trace: "why did my trade take 47 ms?", "verify my last trade"
 
 ## Key URLs (Local)
 
@@ -38,8 +42,10 @@ Browse to → **http://localhost:5173**
 | **Grafana** | http://localhost:3000 (admin/admin) |
 | **Prometheus** | http://localhost:9090 |
 | **Alertmanager** | http://localhost:9093 |
-| **RabbitMQ** | http://localhost:15672 (admin/admin) |
+| **RabbitMQ** | http://localhost:15672 (admin / `$RABBITMQ_PASSWORD` from your `.env` — compose requires it, no default) |
 | **MailDev** | http://localhost:1080 |
+| **GoAlert** | http://localhost:8081 |
+| **Bayesian API** | http://localhost:8100 (needs `docker compose up bayesian-service`) |
 
 ## Testing
 
@@ -56,7 +62,7 @@ See the full [K8s deployment guide](operations/02_DEPLOYMENT_K8S.md). Summary:
 
 ```bash
 # Build and push Docker image
-docker build -t moebiusx/krystalinex-server:vX.Y.Z .
+docker build -t moebiusx/krystalinex-server:vX.Y.Z -f server/Dockerfile.prod .
 docker push moebiusx/krystalinex-server:vX.Y.Z
 
 # Deploy via Helm
@@ -83,5 +89,5 @@ docs/               Documentation
 ## Next Steps
 
 - Read the [Architecture](architecture/01_ARCHITECTURE.md) for system design details
-- Run the [Demo Walkthrough](DEMO.md) for a guided tour
+- Follow the [self-serve demo walkthrough](product/03_DEMO_WALKTHROUGH.md) on your own machine, or the condensed [Demo Script](DEMO.md) if you're presenting
 - Explore the [Observability Whitepaper](OBSERVABILITY_WHITEPAPER.md) for the engineering philosophy
