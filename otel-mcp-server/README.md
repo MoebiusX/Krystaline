@@ -513,10 +513,10 @@ npx vitest run tests/auth.test.ts
 
 ## Appendix: Live Cluster Analysis
 
-The following analysis was generated entirely by an AI agent (GitHub Copilot CLI) using this MCP server to query a production Krystaline cluster — 27 tool calls across 6 skills, zero manual commands. This is what "Proof of Observability" looks like in practice.
+The following analysis was generated entirely by an AI agent (GitHub Copilot CLI) using this MCP server to query a 3-node bare-metal K8s lab cluster running the full Krystaline exchange stack — 27 tool calls across 6 skills, zero manual commands. This is what "Proof of Observability" looks like in practice.
 
 > **Cluster**: Krystaline crypto exchange · 3-node K8s (1 control-plane, 2 workers) · Helm-managed
-> **MCP Server**: v1.2.1 · 6/7 skills active (Elasticsearch disabled) · session-based HTTP transport  
+> **MCP Server**: v1.2.0 · 6/7 skills active (Elasticsearch disabled) · session-based HTTP transport  
 > **Date**: 2026-03-24T19:30 UTC
 
 ---

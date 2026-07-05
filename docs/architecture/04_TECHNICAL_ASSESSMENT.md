@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-Krystaline is a **demo-ready crypto exchange platform** with exceptional observability, security, and monitoring capabilities. The backend demonstrates professional-grade engineering with extensive test coverage (931 tests), proper security middleware, and a sophisticated anomaly detection system. The frontend requires polish for production but is sufficient for investor demos.
+Krystaline is a **demo-ready crypto exchange platform** with exceptional observability, security, and monitoring capabilities. The backend demonstrates professional-grade engineering with extensive test coverage (1,100+ passing automated tests: 1,088 in the main suite + 99 in otel-mcp-server), proper security middleware, and a sophisticated anomaly detection system. The frontend requires polish for production but is sufficient for investor demos.
 
 ### Overall Health Score: **83/100**
 
@@ -62,17 +62,17 @@ Krystaline is a **demo-ready crypto exchange platform** with exceptional observa
 ## Security Assessment
 
 ### ✅ Rate Limiting (IMPLEMENTED)
-**Location:** [server/middleware/security.ts](../server/middleware/security.ts)
+**Location:** [server/middleware/security.ts](../../server/middleware/security.ts)
 
 ```typescript
 // Three-tier rate limiting system
-generalRateLimiter    // 100 req/min - General API
-authRateLimiter       // 20 req/min  - Authentication
-sensitiveRateLimiter  // 5 req/min   - Password reset, etc.
+generalRateLimiter    // 300 req/min - General API
+authRateLimiter       // 60 req/min  - Authentication
+sensitiveRateLimiter  // 15 req/min  - Password reset, etc.
 ```
 
 ### ✅ Security Headers (IMPLEMENTED)
-**Location:** [server/middleware/security.ts](../server/middleware/security.ts)
+**Location:** [server/middleware/security.ts](../../server/middleware/security.ts)
 
 Helmet configured with:
 - Content Security Policy (CSP)
@@ -83,7 +83,7 @@ Helmet configured with:
 - Strict referrer policy
 
 ### ✅ Password Security (IMPLEMENTED)
-**Location:** [server/auth/auth-service.ts](../server/auth/auth-service.ts)
+**Location:** [server/auth/auth-service.ts](../../server/auth/auth-service.ts)
 
 - **Algorithm:** bcrypt
 - **Cost Factor:** 12 (secure)
@@ -96,7 +96,7 @@ Helmet configured with:
 - Email verification flow with 6-digit codes
 
 ### ✅ CORS (IMPLEMENTED)
-**Location:** [server/middleware/security.ts](../server/middleware/security.ts)
+**Location:** [server/middleware/security.ts](../../server/middleware/security.ts)
 
 - Environment-aware origins
 - Proper preflight handling
@@ -111,7 +111,7 @@ Helmet configured with:
 
 ### Testing Assessment
 
-### Test Results: not rerun on 2026-02-06 (last verified: 712/714 passing)
+### Test Results: 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server)
 
 | Test Category | Files | Tests | Status |
 |---------------|-------|-------|--------|
@@ -161,7 +161,7 @@ server/
 ```
 
 ### ✅ Health Endpoints (IMPLEMENTED)
-**Location:** [server/api/health-routes.ts](../server/api/health-routes.ts)
+**Location:** [server/api/health-routes.ts](../../server/api/health-routes.ts)
 
 | Endpoint | Purpose | Status |
 |----------|---------|--------|
@@ -169,7 +169,7 @@ server/
 | `GET /ready` | Readiness probe (with dependency checks) | ✅ |
 
 ### ✅ Graceful Shutdown (IMPLEMENTED)
-**Location:** [server/index.ts](../server/index.ts#L170)
+**Location:** [server/index.ts](../../server/index.ts#L170)
 
 - SIGTERM/SIGINT handlers
 - Database connection cleanup
@@ -177,7 +177,7 @@ server/
 - Active request draining
 
 ### ✅ Error Handling (IMPLEMENTED)
-**Location:** [server/middleware/error-handler.ts](../server/middleware/error-handler.ts)
+**Location:** [server/middleware/error-handler.ts](../../server/middleware/error-handler.ts)
 
 - Global error handler
 - AppError class hierarchy
@@ -186,7 +186,7 @@ server/
 - Correlation ID tracking
 
 ### ✅ Configuration Management (IMPLEMENTED)
-**Location:** [server/config/index.ts](../server/config/index.ts)
+**Location:** [server/config/index.ts](../../server/config/index.ts)
 
 - Centralized Zod-validated config
 - Environment variable mapping
@@ -197,21 +197,21 @@ server/
 ## Observability Assessment
 
 ### ✅ Distributed Tracing
-**Location:** [server/otel.ts](../server/otel.ts)
+**Location:** [server/otel.ts](../../server/otel.ts)
 
 - Full OpenTelemetry SDK integration with auto-instrumentation (Express, HTTP, pg, amqplib)
 - Jaeger exporter enabled; browser context propagation; Kong spans correlated across gateway paths
 - Note: unify exporters under OTLP endpoint once Unified Observability Mode is enabled
 
 ### ✅ Metrics Collection
-**Location:** [server/metrics/prometheus.ts](../server/metrics/prometheus.ts)
+**Location:** [server/metrics/prometheus.ts](../../server/metrics/prometheus.ts)
 
 - HTTP RED metrics, active connections, order processing histograms, circuit breaker gauges
 - RabbitMQ queue depth gauges; business KPIs (trade volume/value, logins, active users)
 - Next step: attach exemplars using active trace IDs for cross-signal linking
 
 ### ✅ Anomaly Detection
-**Location:** [server/monitor/](../server/monitor/)
+**Location:** [server/monitor/](../../server/monitor/)
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
@@ -230,7 +230,7 @@ Features:
 - Prometheus metric correlation
 
 ### ✅ Structured Logging
-**Location:** [server/lib/logger.ts](../server/lib/logger.ts)
+**Location:** [server/lib/logger.ts](../../server/lib/logger.ts)
 
 - Pino JSON with correlation IDs and request/response logging
 - Plan: add OTLP log exporter and align fields with trace/metric resource attributes
@@ -359,7 +359,7 @@ Features:
 ## Database Assessment
 
 ### Schema (IMPLEMENTED)
-**Location:** [db/init.sql](../db/init.sql)
+**Location:** [db/init.sql](../../db/init.sql)
 
 | Table | Purpose | Status |
 |-------|---------|--------|
@@ -382,7 +382,7 @@ Features:
 
 ## Infrastructure Assessment
 
-### Docker Services (14 containers)
+### Docker Services (22 services)
 | Service | Image | Ports | Status |
 |---------|-------|-------|--------|
 | kong-gateway | kong/kong-gateway | 8000-8003 | ✅ |
@@ -432,7 +432,7 @@ Krystaline has a **rock-solid backend** with exceptional observability—the cor
 
 ### Strengths
 1. **Production-grade security** - Rate limiting, helmet, bcrypt, JWT
-2. **Comprehensive testing** - 931 tests with isolated mocking
+2. **Comprehensive testing** - 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server) with isolated mocking
 3. **Best-in-class observability** - Full OTEL stack with LLM analysis
 4. **Clean architecture** - Clear separation of concerns
 5. **Real market data** - Binance WebSocket integration
@@ -458,7 +458,7 @@ Krystaline has a **rock-solid backend** with exceptional observability—the cor
 - Empty states (pre-seed data recommended)
 
 **Recommended prep:**
-1. Run through [DEMO-WALKTHROUGH.md](./DEMO-WALKTHROUGH.md)
+1. Run through [DEMO-WALKTHROUGH.md](../product/03_DEMO_WALKTHROUGH.md)
 2. Pre-seed demo trades
 3. Practice the Jaeger reveal moment
 4. Have fallback talking points ready

@@ -15,7 +15,7 @@ and security-sensitive runbooks private.
 |---|---|---|---|---|
 | P0 | Brand positioning | Contributors, observability leaders, service managers | How Krystaline, Krystaline Observability Lab, Krystaline Core, AI SRE, and Proof of Observability fit together | Naming migration details that reveal private systems, unreleased product names, customer-specific positioning |
 | P0 | Proof of Observability overview | Users, operators, investors | Why an exchange should prove trades, health, and latency with live telemetry instead of status-page claims | Internal dashboards with sensitive labels, exact alert expressions, private environment details |
-| P0 | GenAI observability solution | Observability experts, service managers, senior technical leadership | Thesis, dashboard evidence pack, status map, and AI SRE story for service-manager RCA over verified telemetry | Exact prompts, private context-builder internals, model weights, provider credentials, incident history |
+| P0 | Observability whitepaper (published as `docs/OBSERVABILITY_WHITEPAPER.md`) | Observability experts, service managers, senior technical leadership | Thesis, dashboard evidence pack, status map, and AI SRE story for service-manager RCA over verified telemetry | Exact prompts, private context-builder internals, model weights, provider credentials, incident history |
 | P0 | Public MCP transparency guide | AI-agent builders, users, developers | How Claude, ChatGPT, Copilot, Cursor, or other MCP clients can query public exchange health, volume, recent trades, trace summaries, and ZK proof status | Personal-account tools, private logs, internal MCP auth, raw user data |
 | P0 | From Observability to Integrity | Crypto researchers, users, auditors | How OpenTelemetry and zero-knowledge proofs complement each other: traces show behavior; proofs show integrity | Circuit source, proving keys, exact witness construction, performance bottlenecks that could aid abuse |
 | P0 | Trace-verified trade lifecycle | Developers, prospective users | A conceptual walkthrough of a trade moving through gateway, exchange, matcher, settlement, trace, and public verification | Queue topology details, database schema internals, operational credentials |
@@ -34,7 +34,7 @@ and security-sensitive runbooks private.
 ## Suggested Public Doc Order
 
 1. Publish the flagship narrative: **Proof of Observability overview**.
-2. Publish the technical leadership narrative: **GenAI observability solution**.
+2. Publish the technical leadership narrative: **Observability whitepaper** (`docs/OBSERVABILITY_WHITEPAPER.md`).
 3. Publish the hands-on trust surface: **Public MCP transparency guide**.
 4. Publish the cryptographic trust story: **From Observability to Integrity**.
 5. Publish the operational story: **AI SRE concept note** and **adaptive anomaly detection explainer**.

@@ -300,7 +300,7 @@ Write-Host "✅ Backup completed at $(Get-Date)"
 ```powershell
 # Create scheduled task for automated backups every 6 hours
 $action = New-ScheduledTaskAction -Execute "pwsh.exe" `
-    -Argument "-File C:\Users\bizai\Documents\GitHub\Krystaline\scripts\backup-databases.ps1"
+    -Argument "-File <path-to-repo>\scripts\backup-databases.ps1"
 
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 6)
 

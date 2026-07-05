@@ -35,7 +35,8 @@ stakes are high:
 ## Short Description
 
 Krystaline Observability Lab is an open-source crypto and DeFi observability
-demo platform for bleeding-edge OpenTelemetry, AI SRE, proof systems, and
+demo platform for OpenTelemetry-first tracing, statistical and Bayesian anomaly
+reasoning, local-first LLM RCA, and zk-SNARK proof systems, built for
 service-manager operations.
 
 ## One-Liner

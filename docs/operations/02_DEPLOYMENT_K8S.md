@@ -10,7 +10,7 @@
 - Kubernetes cluster (Docker Desktop, Minikube, or cloud-managed)
 - Helm 3.x installed
 - kubectl configured for your cluster
-- Container registry access (default: `bizait-nas:5000`)
+- Container registry access (default: `<your-registry>`)
 
 ---
 
@@ -93,7 +93,7 @@ k8s/charts/krystalinex/
 server:
   replicaCount: 1          # Scale up for production
   image:
-    repository: bizait-nas:5000/krystalinex/server
+    repository: <your-registry>/krystalinex/server
     tag: v1.0.9
   autoscaling:
     enabled: false         # Enable for production

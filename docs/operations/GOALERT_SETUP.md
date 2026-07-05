@@ -10,9 +10,9 @@ Quick-start guide for configuring incident management and phone notifications.
 
 1. **Open GoAlert UI** → First-time setup wizard appears
 2. **Create Admin Account**
-   - Username: `carlos` (or your preference)
+   - Username: `<your-name>` (or your preference)
    - Password: (choose a secure password)
-   - Email: `carlos@krystaline.io`
+   - Email: `<you@example.com>`
 
 ## 🛠️ Configuration Steps
 
@@ -90,7 +90,7 @@ Alerts from Prometheus rules will automatically route through Alertmanager → G
 ```
 Prometheus → Alertmanager → GoAlert → Phone/SMS/Email
      ↓              ↓
-  (rules)    (carlos@krystaline.io)
+  (rules)    (<you@example.com>)
 ```
 
 ## 🚨 Alert Routing (Current Config)

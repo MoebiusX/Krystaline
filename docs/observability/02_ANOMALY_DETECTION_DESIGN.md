@@ -32,9 +32,6 @@ flowchart TD
     P --> L
 ```
 
-
-> Note: SVG is available at `docs/images/baseline-calculation.svg` if you prefer vector images.
-
 ---
 
 ## 1. Time Bucketing Strategy
@@ -59,7 +56,7 @@ const bucketKey = `${spanKey}:${dayOfWeek}:${hourOfDay}`;
 
 ## 2. Baseline Calculation
 
-### Data Source: [baseline-calculator.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/monitor/baseline-calculator.ts)
+### Data Source: [baseline-calculator.ts](../../server/monitor/baseline-calculator.ts)
 
 ```typescript
 // Query 30 days of historical data
@@ -131,7 +128,7 @@ const thresholds = {
 
 ## 4. Severity Classification (SEV 1-5)
 
-### Types: [types.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/monitor/types.ts)
+### Types: [types.ts](../../server/monitor/types.ts)
 
 ```typescript
 export type SeverityLevel = 1 | 2 | 3 | 4 | 5;

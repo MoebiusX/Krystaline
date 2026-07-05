@@ -65,9 +65,6 @@ flowchart LR
     OC --> J
 ```
 
-
-
-> Note: SVG is available at `docs/images/trace-hierarchy.svg` if you prefer vector images.
 ---
 
 ## Critical: How Spans Join Into Hierarchy
@@ -93,7 +90,7 @@ traceparent: 00-{traceId}-{spanId}-{flags}
              └── version
 ```
 
-### Implementation: [client/src/lib/tracing.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/client/src/lib/tracing.ts)
+### Implementation: [client/src/lib/tracing.ts](../../client/src/lib/tracing.ts)
 
 ```typescript
 import { v4 as uuidv4 } from 'uuid';
@@ -125,7 +122,7 @@ This is used when making API calls from the browser to establish the **root span
 
 Kong receives the `traceparent` header and propagates it downstream.
 
-### Plugin Configuration: [scripts/enable-kong-otel.js](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/scripts/enable-kong-otel.js)
+### Plugin Configuration: [scripts/enable-kong-otel.js](../../scripts/enable-kong-otel.js)
 
 ```javascript
 const pluginConfig = {
@@ -152,7 +149,7 @@ const pluginConfig = {
 
 ## 3. Node.js SDK: Automatic HTTP Propagation
 
-### Instrumentation Setup: [server/instrumentation.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/instrumentation.ts)
+### Instrumentation Setup: [server/otel.ts](../../server/otel.ts)
 
 ```typescript
 import { NodeSDK } from '@opentelemetry/sdk-node';
@@ -189,7 +186,7 @@ When an HTTP request arrives with `traceparent`:
 
 ## 4. RabbitMQ Producer: Manual Context Injection
 
-### Implementation: [server/services/rabbitmq-client.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/services/rabbitmq-client.ts)
+### Implementation: [server/services/rabbitmq-client.ts](../../server/services/rabbitmq-client.ts)
 
 ```typescript
 import { trace, context, SpanKind, propagation } from '@opentelemetry/api';
@@ -248,7 +245,7 @@ async publishOrder(order: Order): Promise<Response> {
 
 ## 5. RabbitMQ Consumer: Context Extraction
 
-### Implementation: [payment-processor/index.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/payment-processor/index.ts)
+### Implementation: [payment-processor/index.ts](../../payment-processor/index.ts)
 
 ```typescript
 import { trace, context, SpanKind, propagation } from '@opentelemetry/api';
@@ -324,7 +321,7 @@ flowchart TD
 
 ## 7. CORS Headers for Trace Context
 
-### Server Configuration: [server/index.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/index.ts)
+### Server Configuration: [server/index.ts](../../server/index.ts)
 
 ```typescript
 app.use((req, res, next) => {
@@ -436,11 +433,11 @@ tracer.startSpan('name', { kind: SpanKind.CONSUMER }, ctx);
 
 | File | Purpose |
 |------|---------|
-| [instrumentation.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/instrumentation.ts) | SDK initialization |
-| [rabbitmq-client.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/services/rabbitmq-client.ts) | RabbitMQ context injection |
-| [payment-processor/index.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/payment-processor/index.ts) | RabbitMQ context extraction |
-| [tracing.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/client/src/lib/tracing.ts) | Client trace ID generation |
-| [enable-kong-otel.js](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/scripts/enable-kong-otel.js) | Kong plugin configuration |
+| [otel.ts](../../server/otel.ts) | SDK initialization |
+| [rabbitmq-client.ts](../../server/services/rabbitmq-client.ts) | RabbitMQ context injection |
+| [payment-processor/index.ts](../../payment-processor/index.ts) | RabbitMQ context extraction |
+| [tracing.ts](../../client/src/lib/tracing.ts) | Client trace ID generation |
+| [enable-kong-otel.js](../../scripts/enable-kong-otel.js) | Kong plugin configuration |
 
 ---
 
@@ -487,6 +484,4 @@ Expected output should show:
 
 ### Proper Trace Hierarchy
 
-When context propagation is working correctly, traces show a clean parent-child hierarchy with all services connected:
-
-![Proper trace hierarchy with api-gateway as parent of kx-exchange](images/proper-trace-hierarchy.png)
+When context propagation is working correctly, traces show a clean parent-child hierarchy with all services connected.

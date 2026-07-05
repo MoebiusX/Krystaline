@@ -3,7 +3,7 @@
 Thanks for taking the time to contribute! Please follow these guidelines to keep changes smooth and safe.
 
 ## Getting Started
-- Fork and clone the repo; create a feature branch from `feature/security-review` (or current working branch).
+- Fork and clone the repo; create a feature branch from `develop`.
 - Install dependencies: `npm install --legacy-peer-deps`.
 - Run tests before changes: `npm test` (or targeted suites when applicable).
 

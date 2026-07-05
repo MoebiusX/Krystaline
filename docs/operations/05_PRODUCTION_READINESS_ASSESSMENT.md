@@ -51,7 +51,7 @@
 ### 1.3 API Security ✅
 | Check | Status | Notes |
 |-------|--------|-------|
-| Rate limiting | ✅ Pass | 3-tier (general: 300/min, auth: 60/min, order: 30/min) |
+| Rate limiting | ✅ Pass | 3-tier (general: 300/min, auth: 60/min, sensitive: 15/min) |
 | Security headers (Helmet) | ✅ Pass | CSP, XSS filter, no-sniff, frame-guard |
 | CORS configuration | ✅ Pass | Whitelist-based, environment-specific |
 | Request sanitization | ✅ Pass | Sensitive fields redacted in logs |
@@ -70,8 +70,8 @@
 ### 2.1 Test Coverage ✅
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| Unit test suites | 43 | 40+ | ✅ Pass |
-| Unit tests passing | 940/949 | 95%+ | ✅ 99% |
+| Unit test files | 58 (main suite) + 7 (otel-mcp-server) | 40+ | ✅ Pass |
+| Unit tests passing | 1,100+ (1,088 main suite + 99 otel-mcp-server) | 95%+ | ✅ Pass |
 | E2E test suites | 3 | 3+ | ✅ Pass |
 | Integration tests | 20+ | 15+ | ✅ Pass |
 
@@ -86,7 +86,7 @@
 ### 2.3 Known Test Issues ⚠️
 | Issue | Impact | Notes |
 |-------|--------|-------|
-| 9 failing tests | Low | Pre-existing price feed mock issues |
+| 14 skipped tests | Low | Intentionally skipped (environment-dependent); 0 failing as of 2026-07-05 |
 | TODO comments in tests | Low | Tech debt markers for future refactoring |
 
 ---
@@ -119,7 +119,7 @@
 ### 3.4 Infrastructure Gaps ⚠️
 | Issue | Severity | Recommendation |
 |-------|----------|----------------|
-| Backup strategy documented | ✅ Done | `docs/BACKUP_RESTORE.md` |
+| Backup strategy documented | ✅ Done | `docs/operations/03_BACKUP_RESTORE.md` |
 | Disaster recovery plan | ✅ Done | Included in BACKUP_RESTORE.md |
 | Horizontal scaling configured | ✅ Done | HPA templates + values.yaml ready |
 
@@ -153,7 +153,7 @@
 ### 4.4 Alerting ✅
 | Check | Status | Notes |
 |-------|--------|-------|
-| Alert rules defined | ✅ Pass | 25+ rules in `config/alerting-rules.yml` |
+| Alert rules defined | ✅ Pass | 48 rules in 11 groups in `config/alerting-rules.yml` |
 | Incident management | ✅ Pass | GoAlert + Alertmanager configured |
 | Mobile notifications | ✅ Pass | ntfy.sh webhook integration |
 
@@ -246,11 +246,11 @@ No production runtime vulnerabilities.
 
 ### Blockers (Must Fix) ✅ ALL RESOLVED
 - [x] ~~Remediate 23 high-severity npm vulnerabilities~~ → Fixed via npm overrides
-- [x] ~~Document backup and disaster recovery procedures~~ → `docs/BACKUP_RESTORE.md`
+- [x] ~~Document backup and disaster recovery procedures~~ → `docs/operations/03_BACKUP_RESTORE.md`
 - [x] ~~Configure TLS termination~~ → Use Kong Gateway or ingress controller
 
 ### High Priority (Should Fix) ✅ ALL RESOLVED
-- [x] ~~Create operational runbook~~ → `docs/RUNBOOK.md`
+- [x] ~~Create operational runbook~~ → `docs/operations/04_RUNBOOK.md`
 - [x] ~~Define alerting rules in Prometheus~~ → `config/alerting-rules.yml`
 - [x] ~~Configure incident management~~ → GoAlert + ntfy
 - [x] ~~Test horizontal scaling (2+ replicas)~~ → HPA templates ready

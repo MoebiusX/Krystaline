@@ -1,6 +1,6 @@
 # Krystaline Investor Demo Walkthrough
 
-> **Purpose:** Step-by-step guide to demonstrate "Proof of Observability™"  
+> **Purpose:** Step-by-step guide to demonstrate "Proof of Observability"  
 > **Duration:** 12-15 minutes  
 > **Updated:** 2026-03-01  
 > **Environment:** Kubernetes (Helm) at `www.krystaline.io`
@@ -39,7 +39,7 @@ curl -X POST https://www.krystaline.io/api/v1/monitor/recalculate
 **Navigate to:** `https://www.krystaline.io` (Landing Page)
 
 **What You'll See:**
-- "Proof of Observability™" headline
+- "Proof of Observability" headline
 - Live system status badge
 - Performance metrics (P50, P95, P99)
 - 100% Transaction Coverage indicator
@@ -132,7 +132,7 @@ Client → Kong Gateway → Express API → RabbitMQ → Order Matcher → Postg
 Opens Jaeger directly to this trade's trace
 
 **Option B: Open Jaeger Manually**
-- Navigate to: `https://www.krystaline.io/jaeger/` (requires nginx basic auth)\r
+- Navigate to: `https://www.krystaline.io/jaeger/` (requires nginx basic auth)
 - Service: `krystalinex` or `kong`
 - Click "Find Traces"
 - Select most recent trace
@@ -140,7 +140,7 @@ Opens Jaeger directly to this trade's trace
 **What to Show in Jaeger:**
 
 1. **Trace Overview**
-   - See 10-17 spans in a waterfall
+   - See the trace waterfall — typically 17+ spans on the full RabbitMQ trade path (observed in demo traces)
    - Total duration in milliseconds
 
 2. **Span Breakdown**
@@ -225,7 +225,7 @@ Opens Jaeger directly to this trade's trace
 > "Yes. Prices come from Binance WebSocket. Trades go through a real order matching engine. PostgreSQL stores everything."
 
 ### "How many spans per transaction?"
-> "Typically 15-20 spans covering: API Gateway, authentication, validation, database reads, message queue, order matching, balance updates."
+> "Typically 17+ spans on the full RabbitMQ trade path (observed in demo traces), covering: API Gateway, authentication, validation, database reads, message queue, order matching, balance updates."
 
 ### "What if there's an anomaly?"
 > "Show `/monitor`. Our system detects slowdowns automatically, calculates severity, and can use LLMs to diagnose root causes."
