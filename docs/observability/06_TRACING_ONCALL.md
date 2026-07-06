@@ -1,5 +1,7 @@
 # On-Call Quick Guide — Tracing & Anomaly Monitoring
 
+*Part of the Proof of Observability series — foundations in [the whitepaper](../OBSERVABILITY_WHITEPAPER.md).*
+
 A short, actionable runbook for on-call engineers to triage tracing and anomaly monitoring incidents quickly.
 
 ---
@@ -13,8 +15,8 @@ To give on-call staff fast, reproducible steps for diagnosing tracing, anomaly, 
 1. Confirm the alert: check the Monitor UI → **Active Alerts** and note **traceId**, **service**, **span**, **SEV**.
 2. Open Jaeger (http://localhost:16686) and search the traceId: verify span hierarchy and missing/long spans.
 3. Check Prometheus metrics snapshot for that timestamp (CPU, memory, request-rate, P99 latency).
-4. Run `Analyze` in the Monitor UI (or POST to `/api/monitor/analyze`) to get LLM insights.
-5. If SEV1/SEV2: escalate to on-call backend team (Slack #ops / PagerDuty) and attach trace + top 3 evidence points.
+4. Run `Analyze` in the Monitor UI (or POST to `/api/v1/monitor/analyze`) to get LLM insights.
+5. If SEV1/SEV2: check GoAlert (http://localhost:8081) — critical alerts route there automatically with email + ntfy push backup (see [Escalation & contact](#escalation--contact)) — and attach trace + top 3 evidence points to the incident.
 
 ---
 
@@ -27,17 +29,17 @@ To give on-call staff fast, reproducible steps for diagnosing tracing, anomaly, 
 ---
 
 ## Useful commands (copy & run)
-- Submit order (reproduce trace):
+- Submit order (reproduce trace) — the API listens on **:5000** and `userId` must be the user's UUID (grab it from the `/activity` page or the users table):
 
-  curl -s -X POST http://localhost:8000/api/orders -H 'Content-Type: application/json' -d '{"pair":"BTC/USD","side":"BUY","quantity":0.01,"orderType":"MARKET","userId":"seed.user.primary@krystaline.io"}'
+  curl -s -X POST http://localhost:5000/api/v1/orders -H 'Content-Type: application/json' -d '{"pair":"BTC/USD","side":"BUY","quantity":0.01,"orderType":"MARKET","userId":"<USER_UUID>"}'
 
 - Manual baseline recalculation:
 
-  curl -s -X POST http://localhost:5000/api/monitor/recalculate -H 'Content-Type: application/json'
+  curl -s -X POST http://localhost:5000/api/v1/monitor/recalculate -H 'Content-Type: application/json'
 
 - Trigger model analysis for a trace:
 
-  curl -s -X POST http://localhost:5000/api/monitor/analyze -H 'Content-Type: application/json' -d '{"traceId":"<TRACE_ID>"}'
+  curl -s -X POST http://localhost:5000/api/v1/monitor/analyze -H 'Content-Type: application/json' -d '{"traceId":"<TRACE_ID>"}'
 
 - Check server metrics endpoint (should be served by backend, not Vite):
 
@@ -85,9 +87,9 @@ To give on-call staff fast, reproducible steps for diagnosing tracing, anomaly, 
 1. Capture: open Monitor UI → click anomaly → copy **traceId** and severity.
 2. Validate traces: open Jaeger → load traceId → screenshot the trace hierarchy.
 3. Collect metrics: query Prometheus around the timestamp (P95/P99, CPU, memory, errors).
-4. Analyze: POST to `/api/monitor/analyze` with traceId and save LLM output.
+4. Analyze: POST to `/api/v1/monitor/analyze` with traceId and save LLM output.
 5. Determine mitigation: scale service, restart worker, or roll back release depending on root cause.
-6. After action: confirm recovery in UI & Jaeger, add incident notes to ticket, and re-run `POST /api/monitor/recalculate` if needed.
+6. After action: confirm recovery in UI & Jaeger, add incident notes to ticket, and re-run `POST /api/v1/monitor/recalculate` if needed.
 
 ---
 
@@ -103,14 +105,24 @@ To give on-call staff fast, reproducible steps for diagnosing tracing, anomaly, 
 ---
 
 ## Escalation & contact
-- Slack: `#ops` (post traceId + short summary)
-- Pager duty / On-call rotation: follow company on-call policy (SEV1 immediate page)
+
+Escalation is deterministic and runs on the local stack — the routing tree is [config/alertmanager.yml](../../config/alertmanager.yml):
+
+- **`severity: critical`** → the `goalert-critical` receiver: GoAlert webhook (http://localhost:8081, own schedules/rotations) **plus** email (delivered to MailDev at http://localhost:1080 in dev), **plus** in parallel the `ntfy-critical` receiver — an ntfy.sh mobile push with `priority=urgent`.
+- **`severity: warning`** → GoAlert, batched (`group_wait: 1m`, `repeat_interval: 4h`).
+- **`source: anomaly-detector`** alerts get their own route grouped by `service` for RCA correlation.
+- **`PriceFeedUnavailable`** fires the auto-remediation webhook first (`POST /api/v1/monitor/webhook/remediation` — self-healing reconnect), then continues to GoAlert for visibility.
+- Inhibition rules suppress warnings when the same `alertname`/`service` is already critical, and suppress everything for a service while `ServiceDown` fires for it.
+
+When escalating manually, attach the **traceId**, severity, and your top 3 evidence points to the GoAlert incident.
 
 ---
 
 ## Notes & best practices
 - Always capture the trace snapshot and metrics snapshot before restarting services.
 - Keep prompt logging enabled only during validation; disable verbose logs after confirmation.
-- Use `POST /api/monitor/recalculate` to validate thresholds after bulk changes or deployments.
+- Use `POST /api/v1/monitor/recalculate` to validate thresholds after bulk changes or deployments.
 
 ---
+
+*Previous: [05 — Bayesian Inference Layer](05_BAYESIAN_INFERENCE.md)*

@@ -372,7 +372,9 @@ see [Getting Started](docs/GETTING_STARTED.md).
 | [Fine-Tuning Guide](docs/observability/04_FINE_TUNING.md) | LoRA training pipeline and synthetic training-data generation. |
 | [K8s Deployment](docs/operations/02_DEPLOYMENT_K8S.md) | Helm charts, Kubernetes setup, and production configuration. |
 | [Runbook](docs/operations/04_RUNBOOK.md) | Operational procedures and incident response. |
-| [GoAlert Setup](docs/operations/GOALERT_SETUP.md) | On-call schedules, notification routing, and provisioning. |
+| [GoAlert Setup](docs/operations/06_GOALERT_SETUP.md) | On-call schedules, notification routing, and provisioning. |
+| [Documentation Index](docs/README.md) | Every active doc, grouped by area. |
+| [Anatomy of a Trade](docs/ANATOMY_OF_A_TRADE.md) | The canonical span-by-span trace of one market order. |
 
 ## A Note on Naming
 
