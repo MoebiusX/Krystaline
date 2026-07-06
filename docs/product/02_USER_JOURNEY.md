@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This document defines the user journey for Krystaline, highlighting our core value proposition: **Proof of Observability™**. All major flows have been implemented and are investor-demo ready.
+This document defines the user journey for Krystaline, highlighting our core value proposition: **Proof of Observability**. All major flows have been implemented and are investor-demo ready.
 
 ---
 
@@ -25,12 +25,12 @@ This document defines the user journey for Krystaline, highlighting our core val
 | Real Price Feed | ✅ Complete | Binance WebSocket, real-time BTC/ETH |
 | Transparency API | ✅ Complete | Public trades with verified traces |
 | Monitoring | ✅ Complete | Anomaly detection, WebSocket streaming |
-| OpenTelemetry | ✅ Complete | Full 17-span distributed tracing |
+| OpenTelemetry | ✅ Complete | Distributed tracing, typically 17+ spans on the full RabbitMQ trade path (observed in demo traces) |
 
 ### Frontend Pages ✅
 | Route | Component | Status |
 |-------|-----------|--------|
-| `/` | Landing Page | ✅ Proof of Observability™ story |
+| `/` | Landing Page | ✅ Proof of Observability story |
 | `/register` | Registration | ✅ Clean signup flow |
 | `/verify-email/:token` | Email Verification | ✅ 6-digit code entry |
 | `/login` | Login | ✅ Professional login |
@@ -47,7 +47,7 @@ This document defines the user journey for Krystaline, highlighting our core val
 ### Phase 1: Discovery (Public)
 
 ```
-Landing Page (/) → "Proof of Observability™" → Sign Up CTA
+Landing Page (/) → "Proof of Observability" → Sign Up CTA
 ```
 
 **What Users See:**
@@ -183,8 +183,8 @@ Register → Verify Email → Login → Dashboard
 ## Demo Script Reference
 
 For step-by-step investor demonstration, see:
-- [DEMO-WALKTHROUGH.md](DEMO-WALKTHROUGH.md) - Full demo script
-- [ROADMAP.md](ROADMAP.md) - Feature timeline
+- [03_DEMO_WALKTHROUGH.md](03_DEMO_WALKTHROUGH.md) - Full demo script
+- [01_ROADMAP.md](01_ROADMAP.md) - Feature timeline
 
 ---
 

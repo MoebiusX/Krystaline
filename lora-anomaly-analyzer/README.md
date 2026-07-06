@@ -5,14 +5,11 @@ base_model: meta-llama/Llama-3.2-1B-Instruct
 tags:
 - generated_from_trainer
 datasets:
-- /data/data/training-data-combined.jsonl
+- ../training-data.jsonl
 model-index:
 - name: data/lora-anomaly-analyzer
   results: []
 ---
-
-<!-- This model card has been generated automatically according to the information the Trainer had access to. You
-should probably proofread and complete it, then remove this comment. -->
 
 [<img src="https://raw.githubusercontent.com/axolotl-ai-cloud/axolotl/main/image/axolotl-badge-web.png" alt="Built with Axolotl" width="200" height="32"/>](https://github.com/axolotl-ai-cloud/axolotl)
 <details><summary>See axolotl config</summary>
@@ -102,19 +99,19 @@ seed: 42
 
 # data/lora-anomaly-analyzer
 
-This model is a fine-tuned version of [meta-llama/Llama-3.2-1B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct) on the /data/data/training-data-combined.jsonl dataset.
+This model is a fine-tuned version of [meta-llama/Llama-3.2-1B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct) on the repo's anomaly training data (`../training-data.jsonl`).
 
 ## Model description
 
-More information needed
+A LoRA adapter (r=16, alpha=32) for meta-llama/Llama-3.2-1B-Instruct, fine-tuned to analyze crypto exchange anomaly events — see [../docs/observability/04_FINE_TUNING.md](../docs/observability/04_FINE_TUNING.md) for the full fine-tuning workflow.
 
 ## Intended uses & limitations
 
-More information needed
+Intended for local anomaly root-cause analysis in the Krystaline monitoring stack; as a 1B-parameter fine-tune, its output is an assistive summary, not an authoritative diagnosis.
 
 ## Training and evaluation data
 
-More information needed
+Trained on the repo's anomaly training data (`../training-data.jsonl`), with 5% held out for evaluation.
 
 ## Training procedure
 

@@ -12,7 +12,7 @@
 
 ```
 ACT 1  The Problem           (3 min)   Why exchanges fail at trust
-ACT 2  The Promise           (2 min)   Proof of Observability™ landing page
+ACT 2  The Promise           (2 min)   Proof of Observability landing page
 ACT 3  Real Platform         (3 min)   Register → Login → Trade (credibility)
 ACT 4  The Complete Picture  (5 min)   Tracing + Exemplars + Logs = audit trail
 ACT 5  Automated Detection   (4 min)   Anomaly detector catches what humans miss
@@ -97,7 +97,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 ### What You'll See
 
-- **"Proof of Observability™"** headline
+- **"Proof of Observability"** headline
 - Live system status badge (Operational / Degraded)
 - Performance metrics (P50, P95, P99 response times)
 - "100% Transaction Coverage" indicator
@@ -108,7 +108,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 >
 > "See these numbers? P50: 12ms, P95: 45ms, P99: 243ms. Those aren't benchmarks from a slide deck. They're calculated in real-time from production OpenTelemetry instrumentation — the same standard used by Google, AWS, and every major cloud provider."
 >
-> "And this: **100% Transaction Coverage**. Every single trade that goes through our system generates a complete distributed trace — typically 17 spans — that you can inspect yourself. Not a sample. Not a summary. Every one."
+> "And this: **100% Transaction Coverage**. Every single trade that goes through our system generates a complete distributed trace — typically 17+ spans on the full RabbitMQ trade path (observed in demo traces) — that you can inspect yourself. Not a sample. Not a summary. Every one."
 >
 > "Let me prove it."
 
@@ -162,7 +162,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 ### What You'll See
 
-- A waterfall diagram showing 10–17 spans
+- A waterfall diagram — typically 17+ spans on the full RabbitMQ trade path (observed in demo traces)
 - Each span represents one operation in one service
 - Total trace duration in milliseconds
 
@@ -286,7 +286,7 @@ curl -s https://www.krystaline.io/api/v1/monitor/model | jq '.model'
 
 > *[When analysis completes, read the summary]*
 
-> "See this? It identified the likely cause, gave us three recommendations ranked by priority, and rated its own confidence. This is a senior SRE's analysis — in 2 seconds instead of 30 minutes."
+> "See this? It identified the likely cause, gave us three recommendations ranked by priority, and rated its own confidence. This is a structured first-pass triage in ~2 seconds that on-call then verifies — instead of 30 minutes of manual investigation."
 
 ### 6A: The Training Loop
 
@@ -353,7 +353,7 @@ GET /api/public/zk/proof/:tradeId  → Returns proof + public signals + verifica
 GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourself)
 ```
 
-> "We also generate a **solvency proof** every 60 seconds. It proves our total reserves are greater than or equal to our liabilities — without revealing any individual user's balance. That's the 'zero-knowledge' part: we prove the statement is true without revealing the underlying data."
+> "We also generate a **solvency proof** every 60 seconds — a Groth16 proof, verified server-side, that our total reserves are greater than or equal to our liabilities, without revealing any individual user's balance. The public endpoint publishes the Poseidon commitment; the per-trade integrity proofs are the ones anyone can verify independently. That's the 'zero-knowledge' part: we prove the statement is true without revealing the underlying data."
 
 ### 7D: The ZK Stats
 
@@ -361,7 +361,7 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 > "Total proofs generated, average proving time — about 200 milliseconds per proof — verification success rate near 100%. And the solvency proof age tells you how recent the latest proof is. It's never more than 60 seconds old."
 >
-> "Traditional exchanges prove solvency once a year with an accounting firm. We prove it every minute with mathematics."
+> "Traditional exchanges prove solvency once a year with an accounting firm. We run that check every minute with mathematics — the proof is verified server-side, and the Poseidon commitment is published publicly."
 
 ---
 
@@ -381,15 +381,15 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 >
 > "**Third: AI-powered diagnosis** — a locally-hosted LLM that's being fine-tuned specifically on our infrastructure patterns. It gets smarter every week. The training pipeline is in our repo — reproducible, auditable AI ops."
 >
-> "**Fourth: Cryptographic verification** — Groth16 zero-knowledge proofs on every trade, solvency proofs every 60 seconds, all publicly verifiable without trusting our infrastructure."
+> "**Fourth: Cryptographic verification** — Groth16 zero-knowledge proofs on every trade, publicly verifiable without trusting our infrastructure, plus a solvency proof every 60 seconds — verified server-side, with the Poseidon commitment published publicly."
 
 ### The Competitive Position
 
-> "Coinbase has brand. Kraken has liquidity. But neither of them can show you a distributed trace of your trade. Neither generates a cryptographic proof of fair execution. Neither has an AI that explains anomalies in real-time."
+> "Coinbase has brand. Kraken has liquidity. But we're not aware of another exchange that publishes per-trade traces — major exchange status pages show aggregate uptime only. Neither generates a cryptographic proof of fair execution. Neither has an AI that explains anomalies in real-time."
 >
 > "Our moat is architectural. It's not a feature you bolt on — it's how the system is built from the ground up. A competitor would need 12 to 18 months to replicate this, and by then we'll have 18 months of fine-tuning data making our AI better."
 >
-> "We have 940 automated tests passing, a production Kubernetes deployment, real Binance prices, and every piece of infrastructure as code in our repository. This is production-grade engineering, not a demo."
+> "We have 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server), a production Kubernetes deployment, real Binance prices, and every piece of infrastructure as code in our repository. This is production-grade engineering, not a demo."
 
 ### The Ask
 
@@ -405,7 +405,7 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 ### "How many spans per transaction?"
 
-> "Typically 15–20 spans covering: API Gateway (Kong), authentication, input validation, database reads/writes, message queue publish/consume, order matching, wallet updates, and ZK proof generation. Every span captures structured attributes — not just timing, but business context like order pair, price, and user ID."
+> "Typically 17+ spans on the full RabbitMQ trade path (observed in demo traces), covering: API Gateway (Kong), authentication, input validation, database reads/writes, message queue publish/consume, order matching, wallet updates, and ZK proof generation. Every span captures structured attributes — not just timing, but business context like order pair, price, and user ID."
 
 ### "What happens if the LLM gives a wrong diagnosis?"
 
@@ -429,7 +429,7 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 ### "What's the team size?"
 
-> *[Adjust to your actual team]* "We're a small team that punches above our weight because of our engineering philosophy: everything is tested (940+ tests), everything is instrumented (17 spans per trade), and everything is automated (anomaly detection, AI diagnosis, ZK proof generation). Our observability infrastructure is itself observable."
+> *[Adjust to your actual team]* "We're a small team that punches above our weight because of our engineering philosophy: everything is tested (1,100+ passing automated tests: 1,088 in the main suite + 99 in otel-mcp-server), everything is instrumented (17 spans per trade), and everything is automated (anomaly detection, AI diagnosis, ZK proof generation). Our observability infrastructure is itself observable."
 
 ---
 
@@ -479,7 +479,7 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 | **ZK Proofs** | Groth16 (snarkjs) | ~200ms proving, BN128 curve |
 | **Alerting** | Alertmanager → GoAlert | Multi-window burn rate (14.4x/6x/3x/1x) |
 | **Deployment** | Kubernetes (3 nodes) | Helm charts, Cloudflare tunnel |
-| **Tests** | Vitest + Playwright | 940+ tests, API smoke + E2E |
+| **Tests** | Vitest + Playwright | 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server), API smoke + E2E |
 | **Security** | bcrypt(12), JWT, 2FA/TOTP | 3-tier rate limiting, SIEM webhook |
 
 ---
@@ -502,11 +502,11 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 ---
 
-## Appendix: The Five Pillars of Proof of Observability™
+## Appendix: The Five Pillars of Proof of Observability
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                   PROOF OF OBSERVABILITY™                       │
+│                   PROOF OF OBSERVABILITY                        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌──────┐   │
@@ -533,7 +533,7 @@ GET /api/public/zk/verify/:tradeId → Server-side verification (or do it yourse
 
 **Pillar 3 — AI Diagnosis:** Locally-hosted Llama 3.2 (1B parameters) receives rich context — span attributes, system metrics, full trace — and streams structured root cause analysis in real-time via WebSocket. LoRA fine-tuning on production feedback creates a continuously improving model.
 
-**Pillar 4 — ZK Proofs:** Groth16 zk-SNARKs commit every trade to its execution details (price, quantity, user, timestamp, trace ID) via Poseidon hashing. Solvency proofs generated every 60 seconds. All publicly verifiable with the open-source `snarkjs` library.
+**Pillar 4 — ZK Proofs:** Groth16 zk-SNARKs commit every trade to its execution details (price, quantity, user, timestamp, trace ID) via Poseidon hashing. Trade-integrity proofs are publicly verifiable with the open-source `snarkjs` library; solvency proofs are generated every 60 seconds and verified server-side, with the Poseidon commitment published publicly.
 
 **Pillar 5 — SLO Framework:** Google SRE multi-window burn rate alerting on 99.9% availability and P95 < 500ms latency targets. Error budgets track remaining tolerance. Burn rates trigger alerts before users notice degradation.
 

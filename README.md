@@ -34,7 +34,7 @@ naming policy.
 | Destination | Use it for |
 |---|---|
 | [Live Lab](https://www.krystaline.io) | Public demo environment. |
-| [GenAI Observability Solution](docs/GENAI_OBSERVABILITY_SOLUTION.md) | AI SRE thesis, service-manager use case, Core/public boundaries. |
+| [Observability Whitepaper](docs/OBSERVABILITY_WHITEPAPER.md) | Philosophy, architecture, and mathematical foundations of the AI SRE thesis. |
 | [Demo Walkthrough](docs/product/03_DEMO_WALKTHROUGH.md) | Guided 15-minute product tour. |
 | [Getting Started](docs/GETTING_STARTED.md) | Local setup, repo map, and useful commands. |
 | [Architecture](docs/architecture/01_ARCHITECTURE.md) | System design, data flow, and service interactions. |
@@ -44,9 +44,8 @@ naming policy.
 
 ## Status Legend
 
-This README follows the same evidence language as the GenAI observability
-document. It separates what is public, what exists in Core, and what is still a
-roadmap item.
+This README uses the following evidence language. It separates what is public,
+what exists in Core, and what is still a roadmap item.
 
 | Tag | Meaning |
 |---|---|
@@ -148,7 +147,7 @@ operational explanation people can act on.
 | Alerting | Prometheus and Alertmanager rules routed through GoAlert, ntfy, and email paths. |
 | Self-healing | Deterministic escalation ladder for feed recovery and Kubernetes restart behavior. |
 | Cryptographic proof | zk-SNARK trade integrity and solvency-proof concepts connected to traces. |
-| Test posture | 940+ automated tests referenced across the public product and readiness docs. |
+| Test posture | 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server). |
 | Infrastructure | Docker Compose for local development; Helm and Kubernetes assets for deployed environments. |
 
 ## Thesis
@@ -202,7 +201,7 @@ The GenAI observability solution is easiest to understand through the Core
 mission-control dashboards: one surface for GenAI provider health, one for RCA
 reliability, and one for MCP/tool trace coverage.
 
-![GenAI observability dashboard pack: GenAI Operations Core, AI RCA Reliability Matrix, and MCP Signal Lattice](docs/assets/genai-observability-dashboard-pack.png)
+![GenAI observability dashboard pack: GenAI Operations Core, AI RCA Reliability Matrix, and MCP Signal Lattice](docs/blog/assets/genai-observability-dashboard-pack.png)
 
 | Dashboard | Status | What it proves |
 |---|---|---|
@@ -349,7 +348,7 @@ see [Getting Started](docs/GETTING_STARTED.md).
 
 | Guide | Description |
 |---|---|
-| [GenAI Observability Solution](docs/GENAI_OBSERVABILITY_SOLUTION.md) | AI SRE thesis, service-manager control, Core/public status, governance boundaries. |
+| [LLM Monitoring Setup](docs/observability/03_LLM_MONITORING_SETUP.md) | LLM observability, RCA metrics, and monitoring of the AI path itself. |
 | [Brand Positioning](docs/BRAND_POSITIONING.md) | Naming architecture for Krystaline, the lab, Core, and legacy runtime IDs. |
 | [Public Documentation Catalog](docs/PUBLIC_DOCUMENTS.md) | Public-safe document plan, audience map, and redaction boundaries. |
 | [Getting Started](docs/GETTING_STARTED.md) | Local setup and repo orientation. |

@@ -74,7 +74,7 @@ Point out:
 *Open tab 2: Jaeger. Find the trade's trace.*
 
 ### 4A: Waterfall diagram
-- Show 10–17 spans across services
+- Show the waterfall — typically 17+ spans on the full RabbitMQ trade path (observed in demo traces)
 - Walk through: Kong auth → Express validation → RabbitMQ publish → Matcher processing → wallet update
 - Highlight **W3C Trace Context** propagating through RabbitMQ message headers
 
@@ -85,7 +85,7 @@ Point out:
 
 ### 4C: Grafana correlation
 *Switch to tab 3: Grafana*
-- Show the **Unified Observability Dashboard** (52 panels, 68 PromQL queries)
+- Show the **Unified Observability Dashboard** (73 panels, 79 PromQL query targets)
 - Point to exemplar dots on latency charts — click one to jump to the full trace
 - Show **SLO panel**: 99.9% availability target, error budget remaining, burn rate
 
@@ -107,7 +107,7 @@ Point out:
 - Click **Analyze** — watch the LLM stream in real time
 - Output: `SUMMARY / CAUSES / RECOMMENDATIONS / CONFIDENCE`
 - Llama 3.2:1B, LoRA fine‑tuned on this infrastructure's patterns
-- **Feedback loop**: 👍/👎 ratings → stored as training examples → weekly retraining
+- **Feedback loop**: 👍/👎 ratings → stored as training examples → monthly retraining
 
 > "Two seconds to get a structured root‑cause analysis that would take an SRE 30 minutes."
 
@@ -138,7 +138,7 @@ Point out:
 
 - Show **ZK proof statistics**: total proofs, verification rate, proving time (~200ms)
 - Every trade produces a **Poseidon commitment** binding: price, quantity, user, timestamp, trace ID
-- **Solvency proofs** generated every 60 seconds — reserves ≥ liabilities, verifiable without revealing individual balances
+- **Solvency proofs** generated every 60 seconds — the Groth16 proof is verified server‑side and the public endpoint publishes the Poseidon commitment, without revealing individual balances
 - Public verification API: `GET /api/public/zk/verify/:tradeId`
 
 > "You can verify any trade with 30 lines of JavaScript. No trust required."
@@ -151,7 +151,7 @@ Point out:
 
 Five capabilities no other platform combines:
 
-1. **Distributed tracing** — 17 spans/trade, full W3C context, exemplar correlation
+1. **Distributed tracing** — typically 17+ spans on the full RabbitMQ trade path, full W3C context, exemplar correlation
 2. **Autonomous anomaly detection** — time‑aware baselines, Welford's algorithm, real‑time WebSocket
 3. **AI diagnosis** — fine‑tuned local LLM, continuously improving from operator feedback
 4. **Bayesian inference** — hierarchical probabilistic model for uncertainty‑aware root‑cause ranking
@@ -166,8 +166,8 @@ This is architectural depth, not a feature checklist. 12–18 months to replicat
 | Question | Answer |
 |----------|--------|
 | Is this real data? | Yes — live Binance WebSocket, real order matching, real PostgreSQL. Only starter balance is simulated. |
-| How many spans per trade? | 15–20 with structured business attributes |
-| What if the LLM is wrong? | Confidence levels shown. Bad ratings feed into LoRA fine‑tuning. Model improves weekly. |
+| How many spans per trade? | Typically 17+ on the full RabbitMQ trade path (observed in demo traces), with structured business attributes |
+| What if the LLM is wrong? | Confidence levels shown. Bad ratings feed into LoRA fine‑tuning. Model improves monthly. |
 | Can you fake a ZK proof? | No — Groth16 is cryptographically secure. Verification key is public. |
 | What's your uptime SLA? | 99.9% (43 min error budget/month). Multi‑window burn rate alerting (Google SRE model). |
 | How does this scale? | K8s HPA, OTEL Collector with tail‑based sampling (100% errors, 10% normal), async ZK proofs. |

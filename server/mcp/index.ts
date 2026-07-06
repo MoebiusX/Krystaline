@@ -591,7 +591,7 @@ server.resource(
 - Price Freshness: ≤ 5s staleness
 
 ## Anomaly Detection
-- Trace-based: Z-score > 6.6σ on span durations (Welford's algorithm, 168 hourly buckets)
+- Trace-based: Z-score > 3.0σ (SEV5) up to 8.0σ (SEV1) on span durations (Welford's algorithm, 168 hourly buckets)
 - Amount-based: Z-score > 3.0σ on transaction amounts (whale detection)
 - Bayesian: Hierarchical probabilistic model (PyMC) for latency/error anomaly with root cause ranking
 - LLM RCA: Ollama-powered root cause analysis with Prometheus metric correlation

@@ -13,31 +13,32 @@
 
 ## 1. Executive Summary
 
-Krystaline Observability Lab is an institutional-grade cryptocurrency exchange
-observability demo built on a philosophy we call **Proof of Observability™** —
+Krystaline Observability Lab is a full-stack cryptocurrency exchange
+observability demo built on a philosophy we call **Proof of Observability** —
 the principle that every transaction, every service interaction, and every
 system decision must be traced, verified, and auditable in real time.
 
 Unlike traditional exchanges that treat monitoring as an afterthought, the lab
 embeds observability into the architecture from the start. Every trade generates
-a distributed trace spanning 8–15+ microservice operations and a **Groth16
+a distributed trace typically spanning 17+ operations on the full RabbitMQ trade
+path (observed in demo traces) and a **Groth16
 zk-SNARK proof** anchoring execution to its timestamp and OTel trace. Every
 latency measurement feeds into statistical baselines that power autonomous
 anomaly detection. Every security event is persisted, correlated, and surfaced
 through unified dashboards — all without requiring operators to switch between
 disconnected tools.
 
-The result is an exchange platform that doesn't just *claim* uptime — it **proves** it. Continuously. Cryptographically. In real-time.
+The result is an exchange demo that pairs continuous telemetry with cryptographic proof: every filled trade carries a Groth16 integrity proof, and solvency is committed to on a rolling basis.
 This architecture serves as a **scalable template for Unified, Consolidated Observability** — demonstrating how the same patterns can track and trace all operations across an entire organization, from trading to compliance to infrastructure.
 
 **Key metrics:**
 - **4 monitored business services** with 32+ tracked operations  
 - **2 zk-SNARK circuits** (Groth16/BN128) — trade integrity + solvency  
 - **5-tier severity model** (SEV1–SEV5) calibrated to normal distribution percentiles  
-- **34 active alert rules** across 9 categories with automated escalation  
+- **48 alert rules** across 11 groups with automated escalation  
 - **Sub-second anomaly detection** via Welford's online algorithm  
 - **AI-powered root-cause analysis** using LoRA-tuned Llama 3.2:1B (locally hosted)  
-- **940+ automated tests** ensuring regression-free deployments  
+- **1,100+ passing automated tests** (1,088 in the main suite + 99 in otel-mcp-server) ensuring regression-free deployments  
 
 ---
 
@@ -54,9 +55,9 @@ the following core services:
 | **Wallet Service** (`kx-wallet`) | Balance management, transfers, deposits/withdrawals | Node.js + PostgreSQL |
 | **Payment Processor** | Inter-service settlement via message queue | Node.js + RabbitMQ |
 
-The platform processes trades against a **live Binance WebSocket price feed**, ensuring non-simulated, deterministic pricing. Users interact through an institutional-grade React frontend that surfaces real-time system health, trace-verified activity feeds, and per-operation performance data — directly in the trading interface.
+The platform processes trades against a **live Binance WebSocket price feed**, ensuring non-simulated, deterministic pricing. Users interact through a React frontend that surfaces real-time system health, trace-verified activity feeds, and per-operation performance data — directly in the trading interface.
 
-![Krystaline Landing Dashboard — "Don't Trust. Verify." with live system status showing 3,879 trades and all services operational](./images/screenshot_landing_dashboard.png)
+<!-- TODO: recapture screenshot — Krystaline Landing Dashboard — "Don't Trust. Verify." with live system status showing 3,879 trades and all services operational -->
 
 ---
 
@@ -176,25 +177,29 @@ Anomalies are classified into a **5-tier severity model** calibrated to the perc
 
 | Severity | σ Threshold | Percentile | Meaning |
 |----------|-------------|------------|---------|
-| SEV-5 | >1.3σ | ~80th | Minor variance — monitoring only |
-| SEV-4 | >1.65σ | ~90th | Notable deviation — investigate |
-| SEV-3 | >2.0σ | ~95th | Significant anomaly — alert |
-| SEV-2 | >2.6σ | ~99th | Critical — immediate response |
-| SEV-1 | >3.3σ | ~99.9th | Catastrophic — page on-call |
+| SEV-5 | >3.0σ | ~99.9th | Minor variance — monitoring only |
+| SEV-4 | >4.0σ | ~99.997th | Notable deviation — investigate |
+| SEV-3 | >5.0σ | >99.9999th | Significant anomaly — alert |
+| SEV-2 | >6.0σ | >99.9999th | Critical — immediate response |
+| SEV-1 | >8.0σ | >99.9999th | Catastrophic — page on-call |
 
-The system enforces a **minimum sample threshold of 500 observations** before enabling detection, preventing false positives during the bootstrap phase when statistical distributions are unreliable.
+*Source: `server/monitor/anomaly-detector.ts`*
+
+The system enforces a **minimum of 10 samples per baseline bucket (MIN_SAMPLES = 10)** before enabling detection, preventing false positives during the bootstrap phase when statistical distributions are unreliable.
 
 ### 4.2 Transaction Amount Anomaly Detection ("Whale Detector")
 
-A separate **Amount Anomaly Detector** monitors transaction volumes using the same Z-score methodology but with **logarithmically-spaced thresholds** calibrated for financial data spanning 6 orders of magnitude:
+A separate **Amount Anomaly Detector** monitors transaction volumes using the same Z-score methodology but with **a more relaxed threshold ladder (3σ–7σ)** tuned to catch massive outliers in financial data spanning 6 orders of magnitude:
 
 | Severity | σ Threshold | Example Detection |
 |----------|-------------|-------------------|
-| SEV-5 | >1.3σ | Unusually large retail order |
-| SEV-4 | >9.3σ | Large institutional block trade |
-| SEV-3 | >12.0σ | Whale transaction |
-| SEV-2 | >17.2σ | Potential market manipulation |
-| SEV-1 | >20.6σ | Systemic anomaly / 6+ orders of magnitude |
+| SEV-5 | >3.0σ | Unusually large retail order |
+| SEV-4 | >4.0σ | Large institutional block trade |
+| SEV-3 | >5.0σ | Whale transaction |
+| SEV-2 | >6.0σ | Potential market manipulation |
+| SEV-1 | >7.0σ | Systemic anomaly / 6+ orders of magnitude |
+
+*Source: `server/monitor/types.ts` (WHALE_THRESHOLDS)*
 
 This detector is **event-driven** — it evaluates every order and transfer at execution time, providing sub-millisecond detection without polling overhead. It calculates approximate USD values using live price feeds and generates human-readable explanations:
 
@@ -265,13 +270,13 @@ Kong Gateway (HTTP span)
                               └─ PostgreSQL commit
 ```
 
-A single trade generates **8–15+ spans** across 4 services, each with microsecond-precision timing. The **W3C Trace Context** standard (`traceparent` header) ensures lossless propagation through both HTTP and AMQP boundaries.
+A single trade typically generates **17+ spans** on the full RabbitMQ trade path (observed in demo traces), each with microsecond-precision timing. The **W3C Trace Context** standard (`traceparent` header) ensures lossless propagation through both HTTP and AMQP boundaries.
 
 ### 5.2 Trace-Verified Activity Feed
 
 The Activity page surfaces every trade with its associated **Trace ID** — a clickable link that opens the complete distributed trace in Jaeger. This is not cosmetic; the platform **only displays trades for which a valid trace exists**, ensuring every record shown to the user has been verified through the observability pipeline.
 
-![Activity page showing trace-linked transactions — each trade has its Trace ID visible with a "View Trace" button linking to Jaeger](./images/screenshot_activity.png)
+<!-- TODO: recapture screenshot — Activity page showing trace-linked transactions — each trade has its Trace ID visible with a "View Trace" button linking to Jaeger -->
 
 ### 5.3 Cross-Signal Correlation
 
@@ -380,7 +385,7 @@ The base Llama 3.2:1B model can be **continuously improved** using production da
 |-----------|-------|
 | **Framework** | Axolotl + QLoRA (4-bit quantization) |
 | **Base model** | Llama 3.2:1B |
-| **Adapter** | LoRA rank 32, alpha 64, dropout 0.05 |
+| **Adapter** | LoRA rank 16, alpha 32, dropout 0.05 |
 | **Training data** | Human-validated anomaly analyses (accept/reject + freeform corrections) |
 | **Data source** | `GET /api/v1/monitor/training-data` — exports validated analyses in Axolotl JSONL format |
 | **Human feedback** | Operators rate AI analyses via the dashboard; corrections become training samples |
@@ -477,23 +482,23 @@ All four observability pillars converge in a single **Grafana dashboard** that p
 | **Database Health** | PostgreSQL Exporter | Connection pool, query duration, table size |
 | **Message Queue** | RabbitMQ (Prometheus) | Queue depth, consumer lag, publish rate |
 
-![Krystaline Unified Observability dashboard — Application Metrics section showing HTTP Request Rate, Response Latency (P50/P95), Error Rate, and Server Memory utilization](./images/screenshot_grafana_1_metrics.png)
+<!-- TODO: recapture screenshot — Krystaline Unified Observability dashboard — Application Metrics section showing HTTP Request Rate, Response Latency (P50/P95), Error Rate, and Server Memory utilization -->
 
-![Order Matcher section showing 475 orders processed, order processing rate, P50/P95 matcher latency, 0.242% average slippage, and System Health panels (CPU 34.6%, Memory 59.7%, Disk 60.0%, 7 Services Up)](./images/screenshot_grafana_2_orders.png)
+<!-- TODO: recapture screenshot — Order Matcher section showing 475 orders processed, order processing rate, P50/P95 matcher latency, 0.242% average slippage, and System Health panels (CPU 34.6%, Memory 59.7%, Disk 60.0%, 7 Services Up) -->
 
-![Logs & Traces section showing aggregated Application Logs from the OTEL Collector and Recent Traces panel for distributed trace analysis](./images/screenshot_grafana_3_logs.png)
+<!-- TODO: recapture screenshot — Logs & Traces section showing aggregated Application Logs from the OTEL Collector and Recent Traces panel for distributed trace analysis -->
 
 #### Jaeger Distributed Trace Backend
 
 The Jaeger UI provides deep-dive trace analysis with service-level span breakdowns, latency scatter plots, and cross-service dependency graphs:
 
-![Jaeger UI showing 20 distributed traces from api-gateway (Kong) — traces contain 30–32 spans across 3 services (api-gateway, kx-exchange, kx-matcher) with 130–240ms durations, demonstrating full end-to-end trace propagation through the order processing pipeline](./images/screenshot_jaeger.png)
+<!-- TODO: recapture screenshot — Jaeger UI showing 20 distributed traces from api-gateway (Kong) — traces contain 30–32 spans across 3 services (api-gateway, kx-exchange, kx-matcher) with 130–240ms durations, demonstrating full end-to-end trace propagation through the order processing pipeline -->
 
 ### 8.2 Public Transparency Dashboard
 
 Beyond internal monitoring, Krystaline exposes a **customer-facing transparency page** that displays real-time system health metrics directly within the trading application:
 
-![System Transparency page — 4 active services monitored, 99.9% uptime, 397ms average response, 32 operations tracked, with per-service health cards showing individual response times](./images/screenshot_transparency.png)
+<!-- TODO: recapture screenshot — System Transparency page — 4 active services monitored, 99.9% uptime, 397ms average response, 32 operations tracked, with per-service health cards showing individual response times -->
 
 This is not a static status page — it's a **live observability feed** that recalculates from actual trace data every refresh. Each service card shows:
 - Current average response time (from Jaeger spans, not synthetic probes)
@@ -506,7 +511,7 @@ Alerts flow through a multi-tier escalation pipeline:
 
 ```mermaid
 flowchart LR
-    PR[Prometheus Rules<br/>25+ rules] --> AM[Alertmanager]
+    PR[Prometheus Rules<br/>48 rules] --> AM[Alertmanager]
     
     AM -->|"severity: critical"| GC[GoAlert Critical<br/>+ Email + ntfy]
     AM -->|"severity: warning"| GW[GoAlert Warning<br/>batched 1 min]
@@ -544,7 +549,7 @@ Krystaline defines and monitors two primary SLOs:
 
 ### 9.2 Minimizing MTTD (Mean Time to Detect)
 
-The platform achieves near-zero MTTD through multiple detection layers:
+The platform targets fast detection — including a 10-second anomaly detection loop — through multiple detection layers:
 
 | Detection Layer | Polling Interval | MTTD |
 |----------------|-----------------|------|
@@ -556,17 +561,17 @@ The platform achieves near-zero MTTD through multiple detection layers:
 
 ### 9.3 Minimizing MTTR (Mean Time to Resolve)
 
-The AI-powered analysis pipeline dramatically reduces MTTR by automating the most time-consuming phase of incident response — **diagnosis**:
+The AI-powered analysis pipeline shortens triage by automating the most time-consuming phase of incident response — **diagnosis**:
 
-| MTTR Phase | Traditional | Krystaline | Improvement |
-|------------|-----------|-------------|-------------|
-| **Detection** | 5–15 min (manual) | <60s (automated) | ~10× faster |
-| **Triage** | 10–30 min (severity assessment) | Instant (5-tier auto-classification) | Eliminated |
-| **Diagnosis** | 30–120 min (log correlation) | 2–5s (LLM analysis with context) | ~100× faster |
-| **Notification** | 5–15 min (manual paging) | 10–30s (GoAlert auto-escalation) | ~20× faster |
-| **Resolution** | Variable | Variable + guided recommendations | Accelerated |
+| MTTR Phase | Krystaline |
+|------------|-------------|
+| **Detection** | <60s (automated) |
+| **Triage** | Instant (5-tier auto-classification) |
+| **Diagnosis** | 2–5s (LLM analysis with context) |
+| **Notification** | 10–30s (GoAlert auto-escalation) |
+| **Resolution** | Variable + guided recommendations |
 
-The combination of automated detection, instant severity classification, AI-generated root-cause analysis, and tiered escalation reduces the theoretical MTTR from **60–180 minutes** to **under 10 minutes** for most incident categories.
+The combination of automated detection, instant severity classification, AI-generated root-cause analysis, and tiered escalation shortens triage for most incident categories.
 
 ---
 
@@ -576,7 +581,7 @@ The combination of automated detection, instant severity classification, AI-gene
 
 The trading interface integrates observability directly into the user workflow. The **Trade page** shows live traces and portfolio data side-by-side:
 
-![Trade page with BTC/USD trading interface, portfolio summary, and Live Traces panel linking to Jaeger and the monitoring dashboard](./images/screenshot_trade_page.png)
+<!-- TODO: recapture screenshot — Trade page with BTC/USD trading interface, portfolio summary, and Live Traces panel linking to Jaeger and the monitoring dashboard -->
 
 The **Live Traces** panel at the bottom-right is a WebSocket-powered stream of OpenTelemetry trace data. When a user executes a trade, the trace appears in real-time — providing instant confirmation that the operation was captured, measured, and verified by the observability pipeline.
 
@@ -640,7 +645,7 @@ The `trade_integrity.circom` circuit proves that a trade commitment was computed
 
 ### 11.3 Solvency Circuit
 
-A separate circuit proves platform solvency every 60 seconds without revealing individual balances:
+A separate circuit generates a solvency proof every 60 seconds without revealing individual balances. The Poseidon reserve commitment is published on the public endpoint; the Groth16 solvency proof itself is verified server-side (the trade-integrity proofs are the externally verifiable ones):
 
 - **8-balance Poseidon commitment**: `Poseidon(balance₁, ..., balance₈) == reserveCommitment`
 - **Sum constraint**: `SUM(balances) == claimedTotal`
@@ -668,7 +673,7 @@ This means **the cryptographic layer itself is observable** — proving time, ve
 
 ### 12.1 Container Architecture
 
-The platform runs as a Docker Compose stack with 18 containerized services:
+The platform runs as a Docker Compose stack with 22 services in docker-compose.yml:
 
 | Category | Services | Count |
 |----------|----------|-------|
@@ -696,18 +701,20 @@ The platform includes a complete **Helm chart** and Kubernetes manifests for pro
 
 ## Appendix A: Alert Rules Summary
 
-| Category | Alert Count | Key Rules |
+| Group | Alert Count | Key Rules |
 |----------|------------|-----------|
-| Application | 4 | HighErrorRate, HighLatencyP99, HighLatencyP99Critical, NoTraffic |
-| Trading | 3 | OrderProcessingFailures, OrderQueueBacklog, PriceFeedUnavailable |
-| Database | 4 | PostgreSQLDown, ConnectionPoolExhaustion, SlowQueries, DatabaseSizeLarge |
-| RabbitMQ | 3 | RabbitMQDown, HighMessageBacklog, ConsumerLag |
-| Infrastructure | 3 | HighCPUUsage, HighMemoryUsage, DiskSpaceLow/Critical |
+| Application | 5 | HighErrorRate, HighLatencyP99, HighLatencyP99Critical, ServiceDown, … |
+| Trading | 4 | OrderProcessingFailures, OrderQueueBackup, OrderQueueCritical, PriceFeedUnavailable |
+| Database | 5 | PostgreSQLDown, DatabaseConnectionsHigh, DatabaseConnectionsCritical, SlowQueries, … |
+| RabbitMQ | 4 | RabbitMQDown, RabbitMQHighMemory, RabbitMQNoConsumers, RabbitMQConsumerLag |
+| Infrastructure | 4 | HighCPUUsage, HighMemoryUsage, DiskSpaceLow, DiskSpaceCritical |
 | Resilience | 2 | CircuitBreakerOpen, CircuitBreakerHalfOpen |
-| Security | 9 | BruteForce, CredentialStuffing, 2FABypass, RateLimitAbuse, etc. |
-| Traffic | 4 | TrafficSpike, SustainedHighTraffic, TrafficFlood, UnusualErrorSpike |
-| SLA | 2 | AvailabilitySLABreach, LatencySLAAtRisk |
-| **Total** | **34** | |
+| Security | 10 | AuthenticationFailures, BruteForceAttack, CredentialStuffingAttack, RateLimitAbuse, … |
+| SLO Availability | 4 | SLOAvailabilityBurnRateCritical/High/Elevated/Slow (multi-window burn rates) |
+| SLO Latency | 2 | SLOLatencyBurnRateCritical, SLOLatencyBurnRateHigh |
+| Redis | 4 | RedisDown, RedisMemoryHigh, RedisConnectedClientsHigh, RedisKeyEviction |
+| Container Health | 4 | ContainerCrashLooping, ContainerOOMKilled, PodNotReady, DeploymentReplicasMismatch |
+| **Total** | **48** | Source: `config/alerting-rules.yml` (11 groups) |
 
 ## Appendix B: Prometheus Metrics Catalog
 

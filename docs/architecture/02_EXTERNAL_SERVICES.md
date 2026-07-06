@@ -25,8 +25,8 @@ curl http://localhost:16686        # Jaeger UI
 - **Manager UI**: http://localhost:8002
 
 ### RabbitMQ
-- **AMQP**: amqp://admin:admin123@localhost:5672
-- **Management UI**: http://localhost:15672 (admin/admin123)
+- **AMQP**: amqp://admin:<RABBITMQ_PASSWORD>@localhost:5672
+- **Management UI**: http://localhost:15672 (admin / <see RABBITMQ_PASSWORD in your env>)
 
 ### Jaeger (Optional)
 - **UI**: http://localhost:16686
@@ -43,7 +43,7 @@ KONG_GATEWAY_URL=http://localhost:8000
 KONG_ADMIN_URL=http://localhost:8001
 
 # RabbitMQ Configuration
-RABBITMQ_URL=amqp://admin:admin123@localhost:5672
+RABBITMQ_URL=amqp://admin:<RABBITMQ_PASSWORD>@localhost:5672
 
 # Jaeger (Optional)
 JAEGER_ENDPOINT=http://localhost:4318/v1/traces
@@ -97,7 +97,7 @@ docker-compose -f docker-compose.external.yml down -v
 
 ### RabbitMQ Connection Failed
 - Check if port 5672 is free
-- Verify credentials: admin/admin123
+- Verify credentials: admin / <see RABBITMQ_PASSWORD in your env>
 
 ### No Traces in Jaeger
 - Ensure JAEGER_ENDPOINT is configured

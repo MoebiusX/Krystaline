@@ -1,5 +1,7 @@
 # OTEL MCP Server — Top 20 Questions It Answers
 
+*Example responses are illustrative transcripts, not live measurements.*
+
 The OTEL MCP Server bridges AI agents to Krystaline's observability stack (Jaeger, Prometheus, Loki) and application APIs (ZK proofs, anomaly detection). It exposes **23 tools** that enable both end‑users and platform engineers to interrogate the system through natural language.
 
 > **Live:** `https://www.krystaline.io` · **MCP endpoint:** `kx-krystalinex-otel-mcp-server:3001`  
@@ -26,7 +28,7 @@ Every trade produces a **Groth16 zk‑SNARK proof** binding price, quantity, use
 
 ### 2. "Is the exchange solvent right now?"
 
-Solvency proofs are generated every 60 seconds, proving reserves ≥ liabilities without revealing individual balances.
+Solvency proofs are generated every 60 seconds — the Groth16 proof is verified server‑side and the public endpoint publishes the Poseidon commitment — without revealing individual balances.
 
 | Tool | What it does |
 |------|-------------|
@@ -109,7 +111,7 @@ The most common on‑call question. The MCP server lets an AI agent correlate tr
 
 ### 7. "What alerts are firing and what do they mean?"
 
-85 alerting rules across 18 groups. The MCP server gives an AI agent the full picture — what's firing, what's pending, and the severity/annotations context.
+48 alerting rules across 11 groups. The MCP server gives an AI agent the full picture — what's firing, what's pending, and the severity/annotations context.
 
 | Tool | What it does |
 |------|-------------|
@@ -214,7 +216,7 @@ Regulatory compliance in crypto means demonstrable auditability. The MCP server 
 
 | Tool | What it does |
 |------|-------------|
-| `zk_solvency` | Proof of reserves ≥ liabilities, generated every 60 seconds |
+| `zk_solvency` | Solvency proof (Groth16, verified server‑side; public Poseidon commitment), generated every 60 seconds |
 | `zk_stats` | Proof generation history — total count, success rate, average proving time |
 | `zk_proof_get` | Individual trade proofs — cryptographic binding of price, quantity, timestamp |
 | `traces_search` | Full audit trail — every API call, every state change, end‑to‑end traced |
@@ -301,14 +303,14 @@ Every step from registration to first trade is instrumented with OpenTelemetry s
 
 | Tool | What it does |
 |------|-------------|
-| `traces_search` | Find traces for each funnel step: registration, KYC, deposit, first order |
+| `traces_search` | Find traces for each funnel step: registration, email verification, first order |
 | `traces_operations` | List all operations per service — see which endpoints are called |
 | `metrics_query` | Request counts per endpoint — compare signup vs deposit vs trade counts |
 | `logs_query` | Error/validation failure logs at each step — why users fail |
 
 **Example:**
 > *"Where's the funnel leaking?"*  
-> → `metrics_query` for request counts at each step → "Last 7 days: 340 registrations → 285 KYC completions (84%) → 142 first deposits (50%) → 98 first trades (69%). Biggest drop: KYC‑to‑deposit. `logs_query` shows 31 deposit attempts failed with 'unsupported currency' — users are trying to deposit EUR but only USD is enabled."
+> → `metrics_query` for request counts at each step → "Last 7 days: 340 registrations → 289 email verifications (85%) → 121 first trades (42%). Biggest drop: verification‑to‑first‑trade. `logs_query` shows 34 order attempts failed validation with 'insufficient balance' — new users are trying to place orders larger than their starter balance."
 
 ---
 

@@ -22,12 +22,12 @@ flowchart LR
 ```
 
 **Key Files:**
-- [ws-server.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/monitor/ws-server.ts) - WebSocket server
-- [stream-analyzer.ts](file:///c:/Users/bizai/Documents/GitHub/OtelE2E/server/monitor/stream-analyzer.ts) - Batching + streaming
+- [ws-server.ts](../../server/monitor/ws-server.ts) - WebSocket server
+- [stream-analyzer.ts](../../server/monitor/stream-analyzer.ts) - Batching + streaming
 
 **Features:**
 - 30-second batch window
-- 8 use-case detection patterns (P0/P1/P2)
+- 9 use-case detection patterns (P0/P1/P2)
 - Streaming tokens to UI
 - Auto-reconnecting WebSocket client
 

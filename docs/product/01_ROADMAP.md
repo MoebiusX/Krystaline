@@ -8,13 +8,13 @@
 
 ## Executive Summary
 
-Krystaline is a cryptocurrency trading platform differentiated by **Proof of Observability™** — full transaction transparency via OpenTelemetry distributed tracing. The platform has reached **investor demo readiness** with comprehensive security, 940+ passing tests, and advanced observability including LLM-powered anomaly analysis.
+Krystaline is a cryptocurrency trading platform differentiated by **Proof of Observability** — full transaction transparency via OpenTelemetry distributed tracing. The platform has reached **investor demo readiness** with comprehensive security, 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server), and advanced observability including LLM-powered anomaly analysis.
 
 ### Unique Value Proposition
 
-> "See exactly how your trade was processed — no other exchange does this."
+> "See exactly how your trade was processed — we're not aware of another exchange that shows you this."
 
-Every transaction generates a **17-span distributed trace** visible to users, proving system integrity and building unprecedented trust in a typically opaque industry.
+Every transaction generates a **distributed trace — typically 17+ spans on the full RabbitMQ trade path** — visible to users, proving system integrity and building trust in a typically opaque industry.
 
 ---
 
@@ -25,7 +25,7 @@ Every transaction generates a **17-span distributed trace** visible to users, pr
 | Area | Status | Details |
 |------|--------|---------|
 | **Security** | ✅ Done | Rate limiting (3-tier), Helmet, bcrypt(12), JWT refresh, 2FA TOTP |
-| **Testing** | ✅ Done | 940+ tests, 43 files, E2E Playwright tests |
+| **Testing** | ✅ Done | 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server), E2E Playwright tests |
 | **Health Endpoints** | ✅ Done | `/health` (liveness), `/ready` (readiness) |
 | **Graceful Shutdown** | ✅ Done | SIGTERM/SIGINT handlers |
 | **Error Handling** | ✅ Done | Global handler, AppError hierarchy |
@@ -42,9 +42,9 @@ Every transaction generates a **17-span distributed trace** visible to users, pr
 | **Baseline Persistence** | ✅ Done | PostgreSQL-backed span baselines |
 
 ### 📊 Metrics
-- **Tests:** 940+ passing
+- **Tests:** 1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server)
 - **E2E Tests:** 3 suites passing
-- **Docker Services:** 14 containers
+- **Docker Services:** 22 services in docker-compose.yml
 - **API Endpoints:** 40+ routes
 - **Frontend Pages:** 9 complete
 
@@ -74,10 +74,10 @@ Every transaction generates a **17-span distributed trace** visible to users, pr
 #### What to Demonstrate
 1. **User Journey** (5 min) - Registration, email verification, JWT login
 2. **Trading Flow** (3 min) - Real Binance prices, order execution
-3. **Transparency Magic** (5 min) - 17-span Jaeger traces, verified integrity
+3. **Transparency Magic** (5 min) - Jaeger traces (typically 17+ spans), verified integrity
 4. **Anomaly Detection** (3 min) - LLM-powered root cause analysis
 
-See [DEMO-WALKTHROUGH.md](DEMO-WALKTHROUGH.md) for step-by-step script.
+See [03_DEMO_WALKTHROUGH.md](03_DEMO_WALKTHROUGH.md) for step-by-step script.
 
 ---
 
@@ -149,10 +149,10 @@ npm run dev
 ## Key Talking Points
 
 ### For Seed Investors
-- "Every trade generates a verifiable 17-span trace"
+- "Every trade generates a verifiable trace (typically 17+ spans)"
 - "AI-powered anomaly detection catches issues before users notice"
 - "Real Binance prices, not fake demo data"
-- "940+ tests ensure reliability"
+- "1,100+ passing automated tests (1,088 in the main suite + 99 in otel-mcp-server) ensure reliability"
 
 ### For Series A
 - "Production security from day one: rate limiting, bcrypt, JWT, 2FA"

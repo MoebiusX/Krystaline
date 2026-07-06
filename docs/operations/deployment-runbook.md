@@ -34,12 +34,11 @@ Scope: deploy, verify, and roll back Krystaline via Docker Compose (demo/dev) or
 3. Start app services (host-run per repo guidance):
    ```bash
    npm install
-   npm run dev:server      # backend
-   npm run dev:payments    # payment-processor if applicable
-   npm run dev:client      # frontend
+   npm run dev             # full dev stack (API + payment-processor + frontend)
+   # or: npm run dev:server   # API server alone
    ```
 4. Health checks:
-   - API: curl http://localhost:3000/health and /ready
+   - API: curl http://localhost:5000/health and /ready
    - Kong: curl http://localhost:8001/status
    - RabbitMQ UI: http://localhost:15672 (prom plugin on 15692)
    - Jaeger UI: http://localhost:16686
@@ -111,12 +110,12 @@ Scope: deploy, verify, and roll back Krystaline via Docker Compose (demo/dev) or
 ## 5) Observability smoke scripts (optional/manual)
 - Simple request + trace check:
   ```bash
-  curl -X GET http://localhost:3000/api/health
+  curl -X GET http://localhost:5000/api/health
   # then confirm trace in Jaeger UI (or via API if available)
   ```
 - Metrics probe:
   ```bash
-  curl -s http://localhost:3000/metrics | grep http_requests_total | head
+  curl -s http://localhost:5000/metrics | grep http_requests_total | head
   ```
 - Collector health:
   ```bash

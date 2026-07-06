@@ -675,7 +675,7 @@ curl -X POST "https://ntfy.sh/YOUR_TOPIC" \
 
 Alerts automatically flow: **Prometheus** → **Alertmanager** → **GoAlert** + **ntfy**
 
-Critical alerts are sent to both GoAlert and ntfy for redundancy. See [config/alertmanager.yml](../config/alertmanager.yml).
+Critical alerts are sent to both GoAlert and ntfy for redundancy. See [config/alertmanager.yml](../../config/alertmanager.yml).
 
 ### Troubleshooting ntfy
 

@@ -8,8 +8,8 @@ This folder contains mermaid source files (`*.mmd`) used to render diagrams embe
 
 2. Render the diagrams to SVG in `docs/images`:
 
-   npx mmdc -i docs/diagrams/trace-hierarchy.mmd -o docs/images/trace-hierarchy.svg -b transparent
-   npx mmdc -i docs/diagrams/baseline-calculation.mmd -o docs/images/baseline-calculation.svg -b transparent
+   npx mmdc -i docs/xgenDocs/diagrams/trace-hierarchy.mmd -o docs/images/trace-hierarchy.svg -b transparent
+   npx mmdc -i docs/xgenDocs/diagrams/baseline-calculation.mmd -o docs/images/baseline-calculation.svg -b transparent
 
 3. (Optional) Generate all diagrams with the convenience npm script:
    - `npm run render:diagrams` (requires Node >= 14)
