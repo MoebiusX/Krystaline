@@ -1,0 +1,33 @@
+# Non-root, least-privilege pod/container securityContext for an app workload.
+#
+# Two habits this encodes:
+#   1. Run as a non-root user with a read-only root filesystem and no privilege
+#      escalation — a compromised process gets far less to work with.
+#   2. Pin images by digest, never by a floating tag like :latest. A floating
+#      tag means "whatever that name pointed at when the node happened to pull",
+#      which is neither reproducible nor auditable.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          # Pin by digest, not by tag. Resolve the digest at release time:
+          #   docker buildx imagetools inspect <registry>/app:<version>
+          image: registry.example.com/app@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          # Give writable scratch as an explicit emptyDir if the app needs /tmp.
