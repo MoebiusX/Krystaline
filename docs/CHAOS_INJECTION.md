@@ -286,7 +286,7 @@ For a live demo showing the full observability pipeline:
 3. **Trigger cascade failure**: `node scripts/chaos-scenarios.js cascade-failure --duration 180`
 4. **Watch the dashboard**: Latency graphs spike → error rate climbs → alerts fire → LLM analysis streams in
 5. **Stop chaos**: `node scripts/chaos-scenarios.js --stop` — system self-heals
-6. **Show the trace**: Click any anomaly trace ID → full Jaeger waterfall with injected delays visible
+6. **Show the trace**: Click any anomaly trace ID → full Jaeger waterfall with injected delays visible — [Anatomy of a Trade](ANATOMY_OF_A_TRADE.md) documents span-by-span what a healthy trade trace should contain, so the injected latency is easy to spot
 
 Expected timeline for `cascade-failure`:
 - **0–30s**: Wallet latency visible on dashboard

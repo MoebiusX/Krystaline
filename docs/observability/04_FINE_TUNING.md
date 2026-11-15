@@ -1,5 +1,7 @@
 # LLM Fine-Tuning Guide
 
+*Part of the Proof of Observability series — foundations in [the whitepaper](../OBSERVABILITY_WHITEPAPER.md).*
+
 Fine-tune a LoRA adapter on your anomaly analysis training data.
 
 ## Prerequisites
@@ -34,6 +36,16 @@ You can also export additional data from the running app:
 curl http://localhost:5000/api/v1/monitor/training/export > training-data-export.jsonl
 ```
 
+### The correction loop (RLHF-style)
+
+The most valuable examples come from operator corrections, collected through the Monitor UI's good/bad rating buttons and exported by [training-store.ts](../../server/monitor/training-store.ts):
+
+- **Good rating** → the prompt/completion pair is exported as-is.
+- **Bad rating with a correction** → the *human correction becomes the training completion*, and the model's original answer is preserved alongside it as `original_completion` — so every corrected example carries an audit trail of what the model said versus what it should have said.
+- **Bad rating without a correction** → skipped at export time (noise, not signal).
+
+This is supervised correction with human-labeled targets — RLHF-style preference collection, not full RLHF (there is no reward model). The repo's [training-data.jsonl](../../training-data.jsonl) currently contains 14 such operator-corrected pairs.
+
 ## Step 2: Data Format
 
 The combined dataset is already in Axolotl's expected Alpaca format:
@@ -45,40 +57,51 @@ No conversion is needed — both `generate-synthetic-training.cjs` and `generate
 
 ## Step 3: Training Config
 
-Create `axolotl-config.yaml`:
+The repo ships the config at [axolotl-config.yaml](../../axolotl-config.yaml). Key sections (paths are container paths — [retrain-model.sh](../../scripts/retrain-model.sh) mounts the project root at `/data`):
 
 ```yaml
 base_model: meta-llama/Llama-3.2-1B-Instruct
-model_type: LlamaForCausalLM
+model_type: AutoModelForCausalLM
 tokenizer_type: AutoTokenizer
+
+# Llama 3 chat template — critical for instruction-following
+chat_template: llama3
+special_tokens:
+  pad_token: "<|finetune_right_pad_id|>"
 
 load_in_8bit: true
 adapter: lora
 lora_r: 16
 lora_alpha: 32
 lora_dropout: 0.05
-lora_target_modules:
+lora_target_modules:      # all 7 projection matrices, not just attention
   - q_proj
   - v_proj
   - k_proj
   - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
 
 datasets:
-  - path: data/training-data-combined.jsonl
+  - path: /data/data/training-data-combined.jsonl
     type: alpaca
 
-output_dir: ./lora-anomaly-analyzer
+output_dir: /data/lora-anomaly-analyzer
 
 # Training params
 micro_batch_size: 2
 gradient_accumulation_steps: 4
-num_epochs: 3
+num_epochs: 5
 learning_rate: 2e-4
+lr_scheduler: cosine
 warmup_ratio: 0.1
 
 # Eval
 val_set_size: 0.05
 ```
+
+These values are not aspirational: the trained adapter committed at [lora-anomaly-analyzer/adapter_config.json](../../lora-anomaly-analyzer/adapter_config.json) records exactly `r: 16`, `lora_alpha: 32`, `lora_dropout: 0.05`, and the same 7 target modules — the artifact matches the config that produced it.
 
 ## Step 4: Run Training
 
@@ -93,32 +116,44 @@ docker run --gpus all -v $(pwd):/workspace axolotlai/axolotl:main-py3.11-cu124-2
 
 Training takes ~30 min on RTX 3080 for 100 examples.
 
-## Step 5: Merge & Quantize
+## Step 5: Merge (and Optionally Quantize)
 
 ```bash
-# Merge LoRA into base model
+# Merge LoRA into base model → lora-anomaly-analyzer/merged/
 python -m axolotl.cli.merge_lora axolotl-config.yaml
-
-# Quantize for Ollama (GGUF format)
-python -m llama.cpp.convert_hf_to_gguf.py ./lora-anomaly-analyzer --outfile anomaly-analyzer.gguf
 ```
+
+**Default path — no GGUF needed.** The repo's pipeline ([retrain-model.sh](../../scripts/retrain-model.sh)) imports the merged safetensors directory straight into Ollama using the committed [Modelfile](../../Modelfile) (`FROM ./lora-anomaly-analyzer/merged`); modern Ollama reads safetensors directly.
+
+**Optional — quantize to GGUF** with llama.cpp if you want a smaller, portable artifact:
+
+```bash
+git clone https://github.com/ggml-org/llama.cpp
+pip install -r llama.cpp/requirements.txt
+
+# Point at the MERGED model directory, not the LoRA adapter directory
+python llama.cpp/convert_hf_to_gguf.py ./lora-anomaly-analyzer/merged \
+  --outfile anomaly-analyzer.gguf --outtype q8_0
+```
+
+> **Note:** the conversion script name and flags vary by llama.cpp version — it was `convert-hf-to-gguf.py` (hyphens) in older checkouts and `convert.py` before that. Run `python llama.cpp/convert_hf_to_gguf.py --help` against your checkout before trusting the flags above.
 
 ## Step 6: Deploy to Ollama
 
-```bash
-# Create Modelfile
-cat > Modelfile << 'EOF'
-FROM ./anomaly-analyzer.gguf
-PARAMETER temperature 0.7
-PARAMETER repeat_penalty 1.3
-SYSTEM You are an expert in distributed systems observability for a crypto exchange.
-EOF
+The committed [Modelfile](../../Modelfile) pins the Llama 3 chat template, stop tokens (`<|eot_id|>`, `<|end_of_text|>`), and the system prompt that enforces the `SUMMARY / CAUSES / RECOMMENDATIONS / CONFIDENCE` response format. Use it as-is for the merged-safetensors path, or swap the `FROM` line to your `.gguf` if you quantized:
 
-# Import to Ollama
+```bash
+# Import to Ollama (committed Modelfile, merged safetensors)
 ollama create anomaly-analyzer -f Modelfile
 
 # Test
 ollama run anomaly-analyzer "Analyze: exchange-api GET 500ms, CPU 0.1%"
+```
+
+Or run the whole train → merge → import → smoke-test pipeline in one step:
+
+```bash
+bash scripts/retrain-model.sh
 ```
 
 ## Step 7: Update App Config
@@ -131,6 +166,25 @@ export OLLAMA_MODEL=anomaly-analyzer
 OLLAMA_MODEL: anomaly-analyzer
 ```
 
+## Evaluation Status — What Is and Isn't Measured
+
+Honest framing of where evaluation stands:
+
+**What exists today:**
+- A 5% held-out validation split (`val_set_size: 0.05`) for eval-loss monitoring during training
+- A smoke test in [retrain-model.sh](../../scripts/retrain-model.sh) that checks the deployed model responds non-empty in the expected format
+- Operator-corrected pairs that document *specific base-model failures* the fine-tune targets. A real example from [training-data.jsonl](../../training-data.jsonl) — the base `llama3.2:1b` analyzing a `tcp.connect` anomaly claimed:
+
+  > *"High CPU usage (> 0.3%) may indicate a resource-intensive task or a complex operation being performed by the exchange-api service."*
+
+  Operator correction, kept verbatim in the dataset:
+
+  > *"Completely incorrect because as it's obvious that 0.3% is not high usage by any stretch."*
+
+  Misreading small metric values as alarming is precisely the class of error the correction loop collects.
+
+**[BACKLOG]: quantitative task-level evaluation.** There is no benchmark yet that measures whether the fine-tuned adapter actually reduces these numeric-misreading errors versus the base model on a held-out set of anomaly scenarios. Eval loss and a smoke test are not that. Until such a harness exists, claims about the fine-tuned model being "better" are qualitative.
+
 ## Tips
 
 - **100+ examples minimum** — the combined dataset ships with 122 (100 synthetic + 22 real)
@@ -138,3 +192,7 @@ OLLAMA_MODEL: anomaly-analyzer
 - **Diverse services** — include all your services in training data
 - **Validate before training** — always run `node scripts/validate-training-data.cjs`
 - **Retrain monthly** — as your system evolves, generate more synthetic samples and collect user feedback
+
+---
+
+*Previous: [03 — LLM Observability](03_LLM_MONITORING_SETUP.md) · Next: [05 — Bayesian Inference Layer](05_BAYESIAN_INFERENCE.md)*

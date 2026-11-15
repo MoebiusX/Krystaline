@@ -4,6 +4,10 @@ An [MCP](https://modelcontextprotocol.io) server that exposes your **OpenTelemet
 
 > Give any LLM agent the ability to query your Jaeger traces, run PromQL, search Loki logs, and investigate production issues — through a standard protocol.
 
+> To see it working, skip to the [Live Cluster Analysis appendix](#appendix-live-cluster-analysis): an AI agent audits a 3-node K8s cluster in 27 tool calls, zero manual commands.
+
+> **About this copy:** this directory is the **v1.2.0 snapshot** of [`MoebiusX/otel-mcp-server`](https://github.com/MoebiusX/otel-mcp-server), vendored into the Krystaline monorepo as a [git subtree](#monorepo-integration-git-subtree). The standalone project evolves separately — the build deployed on the live lab exposed 43 tools across 8 skills (including Grafana and vmalert skills not present in this snapshot) as read from a live MCP connection on 2026-07-05. Everything documented below describes v1.2.0 as committed here.
+
 ```
 ┌─────────────────┐     MCP (stdio/HTTP)     ┌──────────────────┐
 │  Claude Desktop │ ◄──────────────────────► │                  │
@@ -31,6 +35,7 @@ An [MCP](https://modelcontextprotocol.io) server that exposes your **OpenTelemet
 
 ## Features
 
+- **Read-only by design** — every one of the 32 tools is a query; the server registers no write, admin, or mutation operations against any backend. Agents interrogate your stack, they never change it.
 - **32 tools** across 7 skills — traces, metrics, logs, Elasticsearch, Alertmanager, ZK proofs, system health
 - **Skill plugin architecture** — each backend is a self-contained plugin; add new ones with a single file
 - **Two transports** — stdio (Claude Desktop, Copilot) and HTTP (remote, multi-client)
@@ -315,6 +320,8 @@ are silently skipped.
 
 ### ZK Proofs — `zk-proofs` — 4 tools
 
+These four tools let an agent not just retrieve a Groth16 trade proof but cryptographically verify it: `zk_proof_verify` calls the app's public verify endpoint, which ends in a real server-side `snarkjs.groth16.verify()` against the committed verification key — the agent gets a mathematical verdict, not a status flag. We know of no other MCP server that exposes zero-knowledge proof verification as an agent tool; if you do, we would genuinely like to hear about it.
+
 | Tool | Description |
 |------|-------------|
 | `zk_proof_get` | Retrieve a ZK-SNARK proof |
@@ -513,7 +520,7 @@ npx vitest run tests/auth.test.ts
 
 ## Appendix: Live Cluster Analysis
 
-The following analysis was generated entirely by an AI agent (GitHub Copilot CLI) using this MCP server to query a 3-node bare-metal K8s lab cluster running the full Krystaline exchange stack — 27 tool calls across 6 skills, zero manual commands. This is what "Proof of Observability" looks like in practice.
+The following analysis was generated entirely by an AI agent (GitHub Copilot CLI) using this MCP server to query a 3-node bare-metal K8s lab cluster running the full Krystaline exchange stack — 27 tool calls across 6 skills, zero manual commands. This is what ["Proof of Observability"](../docs/OBSERVABILITY_WHITEPAPER.md) looks like in practice.
 
 > **Cluster**: Krystaline crypto exchange · 3-node K8s (1 control-plane, 2 workers) · Helm-managed
 > **MCP Server**: v1.2.0 · 6/7 skills active (Elasticsearch disabled) · session-based HTTP transport  
