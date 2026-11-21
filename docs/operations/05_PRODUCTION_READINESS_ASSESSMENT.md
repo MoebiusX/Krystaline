@@ -37,7 +37,7 @@
 | Environment variable validation | ✅ Pass | Zod schema validation on startup |
 | Production secret enforcement | ✅ Pass | `validateProductionSecrets()` enforces min lengths |
 | .env files in .gitignore | ✅ Pass | Only `.env.example` files tracked |
-| Secret scanning pre-commit | ✅ Pass | `npm run security:secrets` hook |
+| Secret scanning | ⚠️ Manual | `npm run security:secrets` ships as part of the `precommit` npm script, but no git hook or CI job invokes it — run it manually before committing |
 
 ### 1.2 Authentication & Authorization ✅
 | Check | Status | Notes |
@@ -226,13 +226,14 @@ No production runtime vulnerabilities.
 ### 7.1 Available Documentation ✅
 | Document | Status | Notes |
 |----------|--------|-------|
-| README.md | ✅ Present | Setup and overview |
-| SECURITY.md | ✅ Present | Security policy and practices |
-| DEPLOYMENT.md | ✅ Present | Docker deployment guide |
-| ARCHITECTURE.md | ✅ Present | System design |
-| ROADMAP.md | ✅ Present | Feature roadmap |
-| RUNBOOK.md | ✅ Present | Operational procedures + incident response |
-| BACKUP_RESTORE.md | ✅ Present | Backup/restore + disaster recovery |
+| [README.md](../../README.md) | ✅ Present | Setup and overview |
+| [SECURITY.md](../../SECURITY.md) | ✅ Present | Security policy and practices |
+| [01_DEPLOYMENT_DOCKER.md](01_DEPLOYMENT_DOCKER.md) | ✅ Present | Docker deployment guide |
+| [01_ARCHITECTURE.md](../architecture/01_ARCHITECTURE.md) | ✅ Present | System design |
+| [01_ROADMAP.md](../product/01_ROADMAP.md) | ✅ Present | Feature roadmap |
+| [04_RUNBOOK.md](04_RUNBOOK.md) | ✅ Present | Operational procedures + incident response |
+| [03_BACKUP_RESTORE.md](03_BACKUP_RESTORE.md) | ✅ Present | Backup/restore + disaster recovery |
+| [06_GOALERT_SETUP.md](06_GOALERT_SETUP.md) | ✅ Present | On-call and incident-management setup |
 
 ### 7.2 Missing Documentation ⚠️
 | Document | Priority | Recommendation |

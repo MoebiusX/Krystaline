@@ -1,7 +1,7 @@
 # Krystaline Operational Runbook
 
-**Version:** 1.0  
-**Last Updated:** February 1, 2026  
+**Version:** 1.1  
+**Last Updated:** July 5, 2026  
 **On-Call Escalation:** GoAlert → Slack → Phone
 
 ---
@@ -19,6 +19,7 @@
 9. [Deployment Procedures](#9-deployment-procedures)
 10. [Contact Information](#10-contact-information)
 11. [Mobile Notifications (ntfy)](#11-mobile-notifications-ntfy)
+12. [SLOs and Burn-Rate Alerting](#12-slos-and-burn-rate-alerting)
 
 ---
 
@@ -107,7 +108,7 @@ helm status kx -n krystalinex
 |----------|-------------------|-----------|
 | `GET /health` | `200 OK` | Liveness - app is running |
 | `GET /ready` | `200 OK` | Readiness - can serve traffic |
-| `GET /api/health/trading` | `200 OK` + JSON | Trading system operational |
+| `GET /api/v1/health/trading` | `200 OK` + JSON | Trading system operational |
 | `GET /metrics` | Prometheus format | Metrics available |
 
 ### Automated Health Check Script
@@ -119,7 +120,7 @@ helm status kx -n krystalinex
 ENDPOINTS=(
   "http://localhost:5000/health"
   "http://localhost:5000/ready"
-  "http://localhost:8000/health"
+  "http://localhost:8001/status"
   "http://localhost:3001/health"
 )
 
@@ -155,7 +156,7 @@ kubectl -n krystalinex describe pod <pod-name>
 #### Docker Compose
 ```bash
 # Restart single service
-docker-compose restart server
+docker-compose restart rabbitmq
 
 # Restart all services
 docker-compose restart
@@ -163,6 +164,8 @@ docker-compose restart
 # Full restart (stop, remove, recreate)
 docker-compose down && docker-compose up -d
 ```
+
+> The API and matcher are host-run Node processes, not compose services (see [01_DEPLOYMENT_DOCKER.md](01_DEPLOYMENT_DOCKER.md) Section 1). Restart them by restarting `npm run dev` (or `npm run dev:server` for the API alone).
 
 #### Kubernetes
 ```bash
@@ -184,11 +187,13 @@ kubectl -n krystalinex rollout undo deployment kx-krystalinex-server
 docker-compose logs -f --tail=100
 
 # Specific service
-docker-compose logs -f server
+docker-compose logs -f rabbitmq
 
 # Filter errors
-docker-compose logs server 2>&1 | grep -i error
+docker-compose logs rabbitmq 2>&1 | grep -i error
 ```
+
+> The host-run API and matcher log (pino output) to the terminal running `npm run dev` / `npm run dev:server` — read their logs there, or query Loki via Grafana.
 
 #### Kubernetes
 ```bash
@@ -330,9 +335,11 @@ open http://localhost:16686
 
 **Diagnosis:**
 ```bash
-# Check queue depth
+# Check queue depth — live order traffic flows on the legacy `payments` queue
+# (payment-processor/index.ts consumes it; `orders`/`order_response` are the
+# new-name queues, asserted but idle pending migration)
 curl -s -u admin:$RABBITMQ_PASSWORD \
-  http://localhost:15672/api/queues/%2F/orders | jq '.messages'
+  http://localhost:15672/api/queues/%2F/payments | jq '.messages'
 ```
 
 **Resolution:**
@@ -414,7 +421,7 @@ server:
 ```
 
 ```bash
-helm upgrade kx ./k8s/charts/krystalinex -n krystalinex -f values-production.yaml
+helm upgrade kx ./k8s/charts/krystalinex -n krystalinex
 ```
 
 ### 7.3 Database Scaling
@@ -536,6 +543,40 @@ kubectl -n krystalinex set image deployment/kx-krystalinex-server-canary \
 # If OK, promote to full deployment
 ```
 
+### 9.4 Deployment Verification (Smoke Test + Soak Gate)
+
+Run after every deployment — Docker Compose ([01_DEPLOYMENT_DOCKER.md](01_DEPLOYMENT_DOCKER.md)) or Kubernetes ([02_DEPLOYMENT_K8S.md](02_DEPLOYMENT_K8S.md)) — before calling the release green.
+
+#### Observability smoke test
+
+1. **Health endpoints** return 200:
+   ```bash
+   curl http://localhost:5000/health     # API liveness
+   curl http://localhost:5000/ready      # API readiness
+   curl http://localhost:3001/health     # matcher
+   curl http://localhost:8001/status     # Kong admin
+   ```
+2. **Trace check** — submit one test action (a trade, or at minimum a `GET /api/health`) and confirm the end-to-end trace appears in Jaeger (http://localhost:16686). A full RabbitMQ trade path typically shows 17+ spans across 4 services (kx-wallet, api-gateway, kx-exchange, kx-matcher), as observed in demo traces.
+3. **Metrics probe** — counters increment and exporters are up:
+   ```bash
+   curl -s http://localhost:5000/metrics | grep http_requests_total | head
+   # then check http://localhost:9090/targets — all exporters UP
+   ```
+4. **Logs** — entries in Loki/Grafana carry trace IDs; no PII beyond hashed IDs.
+5. **Alerts** — no firing critical alerts in Alertmanager (http://localhost:9093). If a burn-rate alert fires during validation traffic, silence it only after confirming the cause (see [Section 12](#12-slos-and-burn-rate-alerting)).
+6. **Collector** — `docker compose ps otel-collector` reports healthy. (The collector's `health_check` extension listens on 13133 inside the container; that port is not published to the host.)
+
+On Kubernetes, the same checks apply via port-forward (`kubectl -n krystalinex port-forward svc/... <port>:<port>`); pod readiness/liveness probes hit `/health` and `/ready`.
+
+#### Acceptance to mark a release green (soak gate)
+
+- [ ] Health/readiness green across all services
+- [ ] Smoke test passes: one trace + one metric increment + one correlated log for a sample request
+- [ ] **No critical alerts after a 10-minute soak**
+- [ ] Rollback path validated: previous ReplicaSet still present (K8s) or prior compose images available
+
+If the soak gate fails, roll back per [Section 9.2](#92-rollback) and open an incident per [Section 5](#5-incident-response).
+
 ---
 
 ## 10. Contact Information
@@ -594,8 +635,8 @@ histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
 # Active connections
 pg_stat_activity_count{state="active"}
 
-# RabbitMQ queue depth
-rabbitmq_queue_messages{queue="orders"}
+# RabbitMQ queue depth (live traffic flows on the legacy `payments` queue)
+rabbitmq_queue_messages{queue="payments"}
 ```
 
 ---
@@ -692,9 +733,45 @@ Critical alerts are sent to both GoAlert and ntfy for redundancy. See [config/al
 -- Active orders
 SELECT COUNT(*), status FROM orders GROUP BY status;
 
--- Recent errors
-SELECT * FROM audit_log WHERE level = 'error' ORDER BY created_at DESC LIMIT 20;
+-- Recent failed transactions
+SELECT * FROM transactions WHERE status = 'failed' ORDER BY created_at DESC LIMIT 20;
 
 -- User activity
 SELECT DATE(created_at), COUNT(*) FROM users GROUP BY DATE(created_at);
 ```
+
+---
+
+## 12. SLOs and Burn-Rate Alerting
+
+Two SLOs are enforced with multi-window, multi-burn-rate alerts (the Google SRE pattern: fast burns page quickly, slow burns surface eventually). All six rules live in [config/alerting-rules.yml](../../config/alerting-rules.yml) — groups `krystalinex.slo.availability` (4 rules) and `krystalinex.slo.latency` (2 rules), part of the 48 rules / 11 groups in that file. The `slo:*` series they query are precomputed in [config/recording-rules.yml](../../config/recording-rules.yml).
+
+Every rule requires **both** its long and short window to exceed the burn-rate threshold, so a brief spike (short window only) or a stale average (long window only) does not page anyone.
+
+### SLO 1: Availability — 99.9%
+
+99.9% of HTTP requests succeed. Error budget = 0.1% of requests ≈ **43.2 minutes of full downtime per 30-day month**. A burn rate of 1x consumes exactly one month's budget in a month; 14.4x consumes it in ~2 days.
+
+| Rule (alert name) | Burn rate | Windows (long AND short) | `for` | Severity | Budget exhausted in |
+|-------------------|-----------|--------------------------|-------|----------|---------------------|
+| `SLOAvailabilityBurnRateCritical` | 14.4x | 1h and 5m | 2m | critical | ~2 days |
+| `SLOAvailabilityBurnRateHigh` | 6x | 6h and 30m | 5m | warning | ~5 days |
+| `SLOAvailabilityBurnRateElevated` | 3x | 1d and 2h | 15m | warning | ~10 days |
+| `SLOAvailabilityBurnRateSlow` | 1x | 3d and 6h | 1h | info | ~30 days (on track to spend the whole budget) |
+
+### SLO 2: Latency — 95% of requests under 500 ms
+
+P95 latency ≤ 500 ms, expressed as "at least 95% of requests complete below 500 ms". The latency error budget is the 5% of requests allowed to be slower.
+
+| Rule (alert name) | Burn rate | Windows (long AND short) | `for` | Severity |
+|-------------------|-----------|--------------------------|-------|----------|
+| `SLOLatencyBurnRateCritical` | 14.4x | 1h and 5m | 2m | critical |
+| `SLOLatencyBurnRateHigh` | 3x | 1d and 1h | 15m | warning |
+
+### Responding to a burn-rate alert
+
+1. **critical (14.4x)** — treat as SEV2 minimum: at this rate the month's budget is gone in ~2 days. Diagnose via Jaeger error/slow traces and `rate(http_requests_total{status=~"5.."}[5m])` in Prometheus.
+2. **warning (6x / 3x)** — sustained degradation; investigate within the response times in [Section 5](#5-incident-response), correlate with recent deployments.
+3. **info (1x)** — no action required immediately, but the budget is being consumed at full rate; review during business hours.
+
+Remaining availability budget is exported as the `slo:availability:error_budget_remaining` recording rule (see config/recording-rules.yml), so you can check headroom before deciding whether a risky deploy fits in the remaining budget.

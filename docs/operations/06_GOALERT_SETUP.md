@@ -41,9 +41,12 @@ Quick-start guide for configuring incident management and phone notifications.
 4. Copy the key (looks like: `abc123def456...`)
 
 ### Step 5: Connect Alertmanager
-Paste the integration key into the matching `webhook_configs.url` `token=` query
-parameter in `config/alertmanager.yml` (one receiver per GoAlert service).
-Alertmanager reads the token from the URL; no separate token file is used.
+Put the integration key into the GoAlert webhook URLs in `config/alertmanager.yml` — each receiver embeds its key as a `token=` query parameter, in place of its `REPLACE_WITH_GOALERT_*_KEY` placeholder (`scripts/provision-goalert.sh` prints the keys). Keep real keys out of git; no separate token file is used:
+```yaml
+- name: 'goalert-webhook'
+  webhook_configs:
+    - url: 'http://goalert:8081/api/v2/prometheusalertmanager/incoming?token=REPLACE_WITH_GOALERT_GENERAL_KEY'
+```
 
 Restart alertmanager to pick up the change:
 ```bash
@@ -80,8 +83,8 @@ Alerts from Prometheus rules will automatically route through Alertmanager → G
 
 | File | Purpose |
 |------|---------|
-| `config/alertmanager.yml` | Routes critical alerts to GoAlert webhook |
-| `docker-compose.yml` | GoAlert + PostgreSQL services |
+| `config/alertmanager.yml` | Routes alerts to GoAlert webhooks (integration keys embedded as `token=` params) |
+| `docker-compose.yml` | GoAlert v0.33.0 (port 8081) + its own PostgreSQL |
 
 ## 🔗 Integration Flow
 
@@ -93,9 +96,13 @@ Prometheus → Alertmanager → GoAlert → Phone/SMS/Email
 
 ## 🚨 Alert Routing (Current Config)
 
-- **Critical alerts** → GoAlert + Email
-- **Warning alerts** → GoAlert only
-- **Security alerts** → GoAlert (high priority)
+Per `config/alertmanager.yml`:
+
+- **Critical alerts** → GoAlert + email + ntfy.sh mobile push (`priority=urgent`)
+- **Warning alerts** → GoAlert, batched (1m group wait, 4h repeat)
+- **Security alerts** (`service: security`) → GoAlert Generic API, immediate
+- **PriceFeedUnavailable** → auto-remediation webhook on the API first, then continues to GoAlert
+- **NoTraffic** → self-healing traffic ping, then continues to GoAlert
 
 ---
 

@@ -1,3 +1,5 @@
+> **Archived 2026-07-05:** describes the pre-rename payment-PoC era. See [../architecture/01_ARCHITECTURE.md](../architecture/01_ARCHITECTURE.md) for the current architecture.
+
 # External Services Setup for Authentic OpenTelemetry
 
 This document provides instructions for running real Kong Gateway and RabbitMQ services to generate authentic OpenTelemetry spans.

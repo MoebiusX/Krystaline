@@ -27,6 +27,8 @@ repo; it is superseded by `docs/OBSERVABILITY_WHITEPAPER.md`.
 
 | File | Why it is archived |
 |---|---|
+| `legacy-architecture-external-services.md` | Describes the pre-rename payment-PoC/Tempo era stack; superseded by `docs/architecture/01_ARCHITECTURE.md`. |
+| `legacy-architecture-repository-summary.md` | Describes the pre-rename payment-PoC/Tempo era stack; superseded by `docs/architecture/01_ARCHITECTURE.md`. |
 | `legacy-dashboard-reliability-notes.md` | Rough notes that fed later dashboard-integrity thinking. |
 | `legacy-mcp-top-10-duplicate.md` | Duplicate of the current Top 20 MCP questions guide, including the same internal title. |
 | `legacy-mlops-for-aiops.md` | Older standalone LoRA/MLOps draft now superseded by the observability whitepaper and fine-tuning guide. |
